@@ -564,66 +564,64 @@ export const User = {
           .single();
         
         if (!profileError && profile) {
+          // Extract data from additional_info JSON field and direct columns
+          const additionalInfo = profile.additional_info || {};
+          
           // Return user data with profile information
           return {
             id: user.id,
-            email: user.email,
-            name: profile.name || user.user_metadata?.name || user.email.split('@')[0],
+            email: profile.email || user.email,
+            name: profile.full_name || user.user_metadata?.name || user.email.split('@')[0],
             full_name: profile.full_name || user.user_metadata?.full_name || user.email.split('@')[0],
             role: profile.role || user.user_metadata?.role || 'user',
             user_group: profile.user_group || user.user_metadata?.user_group || ['User'],
             created_at: user.created_at,
-            last_active_at: user.last_sign_in_at || new Date().toISOString(),
+            last_active_at: profile.last_active_date || user.last_sign_in_at || new Date().toISOString(),
             status: profile.status || 'active',
-            phone: profile.phone,
-            about: profile.about,
-            experience: profile.experience,
-            availability: profile.availability,
-            preferred_language: profile.preferred_language || 'English'
+            preferred_language: profile.preferred_language || 'English',
+            profile_image: profile.profile_image,
+            registration_date: profile.registration_date,
+            // Data from additional_info JSONB
+            phone: additionalInfo.phone,
+            about: additionalInfo.about,
+            experience: additionalInfo.experience,
+            availability: additionalInfo.availability,
+            desired_role: additionalInfo.desired_role
           };
         } else if (profileError && profileError.code === 'PGRST116') {
-          // Profile doesn't exist, create one from user metadata
-          console.log('Profile not found, creating one from user metadata');
-          try {
-            const newProfile = {
+          // Profile doesn't exist, but it should have been created by the trigger
+          // This might be a timing issue, let's wait and try again
+          console.log('Profile not found, waiting and retrying...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const { data: retryProfile, error: retryError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          if (!retryError && retryProfile) {
+            const additionalInfo = retryProfile.additional_info || {};
+            return {
               id: user.id,
-              full_name: user.user_metadata?.full_name || user.email.split('@')[0],
-              email: user.email,
-              role: user.user_metadata?.role || 'user',
-              user_group: user.user_metadata?.user_group || ['User'],
-              preferred_language: user.user_metadata?.preferred_language || 'English',
-              phone: user.user_metadata?.phone || '',
-              about: user.user_metadata?.about || '',
-              experience: user.user_metadata?.experience || '',
-              availability: user.user_metadata?.availability || '',
-              status: 'active',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              email: retryProfile.email || user.email,
+              name: retryProfile.full_name || user.email.split('@')[0],
+              full_name: retryProfile.full_name || user.email.split('@')[0],
+              role: retryProfile.role || 'user',
+              user_group: retryProfile.user_group || ['User'],
+              created_at: user.created_at,
+              last_active_at: retryProfile.last_active_date || user.last_sign_in_at || new Date().toISOString(),
+              status: retryProfile.status || 'active',
+              preferred_language: retryProfile.preferred_language || 'English',
+              profile_image: retryProfile.profile_image,
+              registration_date: retryProfile.registration_date,
+              phone: additionalInfo.phone,
+              about: additionalInfo.about,
+              experience: additionalInfo.experience,
+              availability: additionalInfo.availability,
+              desired_role: additionalInfo.desired_role
             };
-
-            const { error: insertError } = await supabase
-              .from('user_profiles')
-              .insert([newProfile]);
-
-            if (!insertError) {
-              console.log('Profile created successfully');
-              return {
-                id: user.id,
-                email: user.email,
-                name: newProfile.full_name,
-                full_name: newProfile.full_name,
-                role: newProfile.role,
-                user_group: newProfile.user_group,
-                created_at: user.created_at,
-                last_active_at: user.last_sign_in_at || new Date().toISOString(),
-                status: newProfile.status,
-                phone: newProfile.phone,
-                about: newProfile.about,
-                experience: newProfile.experience,
-                availability: newProfile.availability,
-                preferred_language: newProfile.preferred_language
-              };
-            }
+          }
           } catch (createError) {
             console.error('Error creating profile:', createError);
           }
@@ -699,12 +697,28 @@ export const User = {
       
     if (error) throw error;
     
+    const additionalInfo = profile?.additional_info || {};
+    
     return {
       id: id,
-      name: profile?.name || 'Unknown User',
-      role: profile?.role || 'user',
-      user_group: profile?.user_group || ['User'],
-      ...profile
+      name: profile.full_name || 'Unknown User',
+      full_name: profile.full_name || 'Unknown User',
+      role: profile.role || 'user',
+      user_group: profile.user_group || ['User'],
+      email: profile.email,
+      preferred_language: profile.preferred_language || 'English',
+      status: profile.status || 'active',
+      profile_image: profile.profile_image,
+      registration_date: profile.registration_date,
+      last_active_date: profile.last_active_date,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+      // Data from additional_info JSONB
+      phone: additionalInfo.phone,
+      about: additionalInfo.about,
+      experience: additionalInfo.experience,
+      availability: additionalInfo.availability,
+      desired_role: additionalInfo.desired_role
     };
   },
   
@@ -716,13 +730,30 @@ export const User = {
       
     if (error) throw error;
     
-    return profiles.map(profile => ({
-      id: profile.id,
-      name: profile.name || 'Unknown User',
-      role: profile.role || 'user',
-      user_group: profile.user_group || ['User'],
-      ...profile
-    }));
+    return profiles.map(profile => {
+      const additionalInfo = profile.additional_info || {};
+      return {
+        id: profile.id,
+        name: profile.full_name || 'Unknown User',
+        full_name: profile.full_name || 'Unknown User',
+        role: profile.role || 'user',
+        user_group: profile.user_group || ['User'],
+        email: profile.email,
+        preferred_language: profile.preferred_language || 'English',
+        status: profile.status || 'active',
+        profile_image: profile.profile_image,
+        registration_date: profile.registration_date,
+        last_active_date: profile.last_active_date,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        // Data from additional_info JSONB
+        phone: additionalInfo.phone,
+        about: additionalInfo.about,
+        experience: additionalInfo.experience,
+        availability: additionalInfo.availability,
+        desired_role: additionalInfo.desired_role
+      };
+    });
   },
   
 

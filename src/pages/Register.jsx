@@ -98,35 +98,42 @@ export default function Register() {
       }
 
       if (data.user) {
-        // Create a profile record in the user_profiles table
+        // Profile will be created automatically by the create_new_user_profile trigger
+        // But we need to update it with the additional registration info
         try {
-          const profileData = {
-            id: data.user.id,
-            full_name: formData.full_name,
-            email: formData.email,
+          // Wait a moment for the trigger to create the profile
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Store extra info in additional_info JSONB field
+          const additionalInfo = {
+            desired_role: formData.desired_role,
             phone: formData.phone,
-            role: formData.desired_role.toLowerCase(),
-            user_group: [formData.desired_role],
             about: formData.about,
             experience: formData.experience,
-            availability: formData.availability,
-            preferred_language: formData.preferred_language,
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            availability: formData.availability
           };
 
-          const { error: profileError } = await supabase
+          // Update the profile with registration form data
+          const { error: updateError } = await supabase
             .from('user_profiles')
-            .insert([profileData]);
+            .update({
+              full_name: formData.full_name,
+              preferred_language: formData.preferred_language || 'English',
+              user_group: [formData.desired_role],
+              additional_info: additionalInfo,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', data.user.id);
 
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-            // Don't fail the registration if profile creation fails
-            // The user is still created in auth, just log the error
+          if (updateError) {
+            console.error("Profile update error:", updateError);
+            // Don't fail registration if profile update fails
+          } else {
+            console.log("Profile updated successfully with registration data");
           }
-        } catch (profileError) {
-          console.error("Profile creation error:", profileError);
+        } catch (error) {
+          console.error("Profile update error:", error);
+          // Don't fail registration if profile update fails
         }
 
         setShowSuccessDialog(true);
