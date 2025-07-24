@@ -1,0 +1,14 @@
+name: Build Optimization Hook
+description: Optimizes build process on build script changes or failures
+trigger:
+  type: manual
+  alias: "Build Optimization"
+action:
+  type: agent
+  prompt: |
+    Optimize the build process for the selected files:
+    - Identify slow build steps
+    - Suggest build optimizations
+    - Update build configurations
+    - Generate build reports
+    - Set up caching strategies

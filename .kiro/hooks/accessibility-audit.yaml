@@ -1,0 +1,14 @@
+name: Accessibility Audit Hook
+description: Checks accessibility compliance on UI component changes
+trigger:
+  type: onSave
+  filePattern: "**/*.{jsx,tsx,vue,svelte,html}"
+action:
+  type: agent
+  prompt: |
+    Check accessibility compliance for the saved UI component:
+    - Verify WCAG guidelines compliance
+    - Check color contrast ratios
+    - Ensure proper ARIA labels
+    - Validate keyboard navigation
+    - Generate accessibility reports

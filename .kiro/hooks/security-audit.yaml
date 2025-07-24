@@ -1,0 +1,14 @@
+name: Security Audit Hook
+description: Runs security checks on file save or commit
+trigger:
+  type: onSave
+  filePattern: "**/*.{js,ts,jsx,tsx,py,java,cs,go,json,xml,yml,yaml}"
+action:
+  type: agent
+  prompt: |
+    Run security checks on the saved file:
+    - Scan for hardcoded secrets/credentials
+    - Check for SQL injection vulnerabilities
+    - Identify insecure dependencies
+    - Verify proper input validation
+    - Check for exposed sensitive data

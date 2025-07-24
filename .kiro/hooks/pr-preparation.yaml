@@ -1,0 +1,14 @@
+name: PR Preparation Hook
+description: Prepares pull request on branch push or manual invocation
+trigger:
+  type: manual
+  alias: "PR Preparation"
+action:
+  type: agent
+  prompt: |
+    Prepare a pull request for the current changes:
+    - Generate PR description based on changes
+    - Create checklist of completed tasks
+    - Identify breaking changes
+    - Suggest reviewers based on code changes
+    - Update project documentation

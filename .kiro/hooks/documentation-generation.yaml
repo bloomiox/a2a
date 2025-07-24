@@ -1,0 +1,14 @@
+name: Documentation Generation Hook
+description: Updates or generates documentation for code files
+trigger:
+  type: onSave
+  filePattern: "**/*.{js,ts,jsx,tsx,py,java,cs,go}"
+action:
+  type: agent
+  prompt: |
+    Update or generate documentation for the saved file:
+    - Generate/update README files
+    - Create API documentation
+    - Update inline code comments
+    - Generate changelog entries
+    - Create architecture diagrams when needed

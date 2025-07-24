@@ -1,0 +1,13 @@
+name: Test Generation Hook
+description: Generates corresponding test files for code changes
+trigger:
+  type: onSave
+  filePattern: "**/*.{js,ts,jsx,tsx,py,java,cs,go}"
+action:
+  type: agent
+  prompt: |
+    Generate or update a test file for the saved file.
+    - Analyze function signatures and create unit tests
+    - Include edge cases and error scenarios
+    - Follow project's testing framework conventions
+    - Update existing tests when implementation changes

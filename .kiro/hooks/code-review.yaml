@@ -1,0 +1,14 @@
+name: Code Review Hook
+description: Performs automated code review on commit or manual invocation
+trigger:
+  type: manual
+  alias: "Code Review"
+action:
+  type: agent
+  prompt: |
+    Perform an automated code review on the selected files:
+    - Check for code smells and anti-patterns
+    - Verify naming conventions
+    - Identify potential security vulnerabilities
+    - Suggest performance optimizations
+    - Ensure proper error handling

@@ -1,0 +1,14 @@
+name: Performance Analysis Hook
+description: Analyzes performance metrics on build completion or manual invocation
+trigger:
+  type: manual
+  alias: "Performance Analysis"
+action:
+  type: agent
+  prompt: |
+    Analyze performance metrics for the selected files:
+    - Check bundle size and optimization
+    - Identify performance bottlenecks
+    - Suggest caching strategies
+    - Analyze database query performance
+    - Generate performance reports

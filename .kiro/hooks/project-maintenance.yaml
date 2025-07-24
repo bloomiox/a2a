@@ -1,0 +1,14 @@
+name: Project Maintenance Hook
+description: Performs project maintenance on schedule or manual invocation
+trigger:
+  type: manual
+  alias: "Project Maintenance"
+action:
+  type: agent
+  prompt: |
+    Perform project maintenance tasks:
+    - Clean up unused code and dependencies
+    - Update project documentation
+    - Analyze code metrics and trends
+    - Generate project health reports
+    - Suggest refactoring opportunities

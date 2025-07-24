@@ -1,0 +1,14 @@
+name: Environment Configuration Hook
+description: Validates and syncs configurations on environment file changes
+trigger:
+  type: onSave
+  filePattern: "**/.env*,**/config.*"
+action:
+  type: agent
+  prompt: |
+    Validate and sync configurations for the saved file:
+    - Check for missing required variables
+    - Validate configuration formats
+    - Sync configurations across environments
+    - Generate configuration documentation
+    - Detect configuration drift

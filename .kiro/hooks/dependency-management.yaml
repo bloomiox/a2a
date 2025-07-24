@@ -1,0 +1,14 @@
+name: Dependency Management Hook
+description: Analyzes and optimizes dependencies
+trigger:
+  type: onSave
+  filePattern: "**/package.json,**/requirements.txt,**/pom.xml"
+action:
+  type: agent
+  prompt: |
+    Analyze and optimize dependencies in the saved file:
+    - Check for security vulnerabilities
+    - Identify outdated packages
+    - Suggest alternative lighter packages
+    - Verify license compatibility
+    - Update lock files
