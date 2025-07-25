@@ -42,6 +42,8 @@ import DriverNavigation from "./DriverNavigation";
 
 import DriverHistory from "./DriverHistory";
 
+import LiveBroadcastTest from "./LiveBroadcastTest";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -88,6 +90,8 @@ const PAGES = {
     
     DriverHistory: DriverHistory,
     
+    LiveBroadcastTest: LiveBroadcastTest,
+    
 }
 
 function _getCurrentPage(url) {
@@ -131,13 +135,13 @@ function PagesContent() {
                 
                 <Route path="/Search" element={<Search />} />
                 
-                <Route path="/AdminDashboard" element={<AdminDashboard />} />
+                <Route path="/admindashboard" element={<AdminDashboard />} />
                 
                 <Route path="/TourDetails" element={<TourDetails />} />
                 
                 <Route path="/Landing" element={<Landing />} />
                 
-                <Route path="/Driver" element={<Driver />} />
+                <Route path="/driver" element={<Driver />} />
                 
                 <Route path="/CRM" element={<CRM />} />
                 
@@ -151,11 +155,13 @@ function PagesContent() {
                 
                 <Route path="/ReportIssue" element={<ReportIssue />} />
                 
-                <Route path="/CreatorDashboard" element={<CreatorDashboard />} />
+                <Route path="/creatordashboard" element={<CreatorDashboard />} />
                 
-                <Route path="/DriverNavigation" element={<DriverNavigation />} />
+                <Route path="/drivernavigation" element={<DriverNavigation />} />
                 
-                <Route path="/DriverHistory" element={<DriverHistory />} />
+                <Route path="/driverhistory" element={<DriverHistory />} />
+                
+                <Route path="/livebroadcasttest" element={<LiveBroadcastTest />} />
                 
             </Routes>
         </Layout>

@@ -76,36 +76,60 @@ export default function Register() {
       // Use Supabase to create a new user account
       const { supabase } = await import("@/api/supabaseClient");
       
+      console.log("Attempting to sign up user:", formData.email);
+      
+      // Try signup with minimal metadata first
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password, // We need to add password field
+        password: formData.password,
         options: {
           data: {
-            full_name: formData.full_name,
-            role: formData.desired_role.toLowerCase(),
-            user_group: [formData.desired_role],
-            phone: formData.phone,
-            about: formData.about,
-            experience: formData.experience,
-            availability: formData.availability,
-            preferred_language: formData.preferred_language
+            // Only include essential data to avoid trigger issues
+            email: formData.email
           }
         }
       });
 
+      console.log("Signup response:", { 
+        user: data?.user ? { id: data.user.id, email: data.user.email } : null, 
+        session: data?.session ? 'exists' : null,
+        error: error ? { 
+          message: error.message, 
+          status: error.status,
+          details: error.details 
+        } : null 
+      });
+
       if (error) {
+        console.error("Signup error details:", {
+          message: error.message,
+          status: error.status,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        // Provide more user-friendly error messages
+        if (error.message.includes('User already registered')) {
+          throw new Error('An account with this email already exists. Please try logging in instead.');
+        } else if (error.message.includes('Database error')) {
+          throw new Error('There was a database issue during registration. Please try again or contact support.');
+        } else if (error.message.includes('Invalid email')) {
+          throw new Error('Please enter a valid email address.');
+        }
+        
         throw error;
       }
 
       if (data.user) {
-        // Profile will be created automatically by the create_new_user_profile trigger
-        // But we need to update it with the additional registration info
+        // Handle profile creation - either by trigger or manually
         try {
-          // Wait a moment for the trigger to create the profile
+          // Wait a moment for the trigger to create the profile (if it exists)
           await new Promise(resolve => setTimeout(resolve, 1000));
           
           // Store extra info in additional_info JSONB field
           const additionalInfo = {
+            full_name: formData.full_name,
             desired_role: formData.desired_role,
             phone: formData.phone,
             about: formData.about,
@@ -113,23 +137,55 @@ export default function Register() {
             availability: formData.availability
           };
 
-          // Update the profile with registration form data
-          const { error: updateError } = await supabase
+          // First, check if profile exists
+          const { data: existingProfile, error: checkError } = await supabase
             .from('user_profiles')
-            .update({
-              full_name: formData.full_name,
-              preferred_language: formData.preferred_language || 'English',
-              user_group: [formData.desired_role],
-              additional_info: additionalInfo,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', data.user.id);
+            .select('id')
+            .eq('id', data.user.id)
+            .single();
 
-          if (updateError) {
-            console.error("Profile update error:", updateError);
-            // Don't fail registration if profile update fails
+          if (checkError && checkError.code === 'PGRST116') {
+            // Profile doesn't exist, create it
+            console.log("Profile doesn't exist, creating it manually");
+            const { error: insertError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: data.user.id,
+                preferred_language: formData.preferred_language || 'English',
+                user_group: [formData.desired_role],
+                additional_info: additionalInfo,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+
+            if (insertError) {
+              console.error("Profile creation error:", insertError);
+              // Don't fail registration if profile creation fails
+            } else {
+              console.log("Profile created successfully with registration data");
+            }
+          } else if (!checkError) {
+            // Profile exists, update it
+            console.log("Profile exists, updating with registration data");
+            const { error: updateError } = await supabase
+              .from('user_profiles')
+              .update({
+                preferred_language: formData.preferred_language || 'English',
+                user_group: [formData.desired_role],
+                additional_info: additionalInfo,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.user.id);
+
+            if (updateError) {
+              console.error("Profile update error:", updateError);
+              // Don't fail registration if profile update fails
+            } else {
+              console.log("Profile updated successfully with registration data");
+            }
           } else {
-            console.log("Profile updated successfully with registration data");
+            console.error("Error checking profile existence:", checkError);
           }
         } catch (error) {
           console.error("Profile update error:", error);

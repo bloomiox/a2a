@@ -114,9 +114,10 @@ export default function AdminAnalytics({ tours, users, assignments, userActivity
                      timeRange === "year" ? subDays(new Date(), 365) :
                      new Date(0);
 
-    return toursWithFinancials.filter(tour => 
-      isAfter(new Date(tour.created_date), cutoffDate)
-    );
+    return toursWithFinancials.filter(tour => {
+      const tourDate = tour.created_date || tour.created_at;
+      return tourDate && !isNaN(new Date(tourDate).getTime()) && isAfter(new Date(tourDate), cutoffDate);
+    });
   }, [toursWithFinancials, timeRange]);
 
   // Calculate KPIs
@@ -138,8 +139,12 @@ export default function AdminAnalytics({ tours, users, assignments, userActivity
   const monthlyRevenue = useMemo(() => {
     const months = {};
     filteredTours.forEach(tour => {
-      const monthKey = format(new Date(tour.created_date), 'MMM yyyy');
-      months[monthKey] = (months[monthKey] || 0) + tour.revenue;
+      // Validate date before formatting
+      const tourDate = tour.created_date || tour.created_at;
+      if (tourDate && !isNaN(new Date(tourDate).getTime())) {
+        const monthKey = format(new Date(tourDate), 'MMM yyyy');
+        months[monthKey] = (months[monthKey] || 0) + tour.revenue;
+      }
     });
     
     return Object.entries(months).map(([month, revenue]) => ({
@@ -159,7 +164,10 @@ export default function AdminAnalytics({ tours, users, assignments, userActivity
 
   // User engagement data
   const engagementData = useMemo(() => [
-    { name: 'New Users', value: safeUsers.filter(u => isAfter(new Date(u.created_date), subDays(new Date(), 30))).length },
+    { name: 'New Users', value: safeUsers.filter(u => {
+      const userDate = u.created_date || u.created_at;
+      return userDate && !isNaN(new Date(userDate).getTime()) && isAfter(new Date(userDate), subDays(new Date(), 30));
+    }).length },
     { name: 'Active Users', value: activeUsers },
     { name: 'Tours Created', value: filteredTours.length },
     { name: 'Tours Completed', value: completedTours }

@@ -6,7 +6,7 @@ import { Volume2, VolumeX, Radio, AlertCircle, PlayCircle, Loader2 } from "lucid
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { audioRelay } from '@/api/functions';
 
-export default function LiveAudioReceiver({ driverId, isActive = true }) {
+export default function LiveAudioReceiver({ driverId, tourId, isActive = true }) {
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
     const [receivedChunks, setReceivedChunks] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -29,6 +29,10 @@ export default function LiveAudioReceiver({ driverId, isActive = true }) {
     const handleConnect = () => {
         if (!driverId) {
             setError("Driver ID is not available.");
+            return;
+        }
+        if (!tourId) {
+            setError("Tour ID is not available.");
             return;
         }
         startPolling();
@@ -92,6 +96,7 @@ export default function LiveAudioReceiver({ driverId, isActive = true }) {
             const response = await audioRelay({
                 action: 'getAudio',
                 driverId: driverId,
+                tourId: tourId,
                 lastChunkId: lastChunkIdRef.current
             });
 

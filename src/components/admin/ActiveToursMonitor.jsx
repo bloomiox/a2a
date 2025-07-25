@@ -46,6 +46,11 @@ export default function ActiveToursMonitor() {
       
       const assignments = await TourAssignment.filter({ status: 'in_progress' }) || [];
       
+      console.log('[ACTIVE_TOURS] Loaded assignments:', assignments.length);
+      if (assignments.length > 0) {
+        console.log('[ACTIVE_TOURS] Sample assignment:', assignments[0]);
+      }
+      
       if (assignments.length === 0) {
         setActiveTours([]);
         setSelectedTour(null);
@@ -53,8 +58,16 @@ export default function ActiveToursMonitor() {
         return;
       }
       
-      const tourIds = [...new Set(assignments.map(a => a.tour_id).filter(Boolean))];
-      const driverIds = [...new Set(assignments.map(a => a.driver_id).filter(Boolean))];
+      // Extract and normalize IDs - handle cases where they might be objects
+      const tourIds = [...new Set(assignments.map(a => {
+        const tourId = typeof a.tour_id === 'string' ? a.tour_id : a.tour_id?.id || String(a.tour_id);
+        return tourId;
+      }).filter(Boolean))];
+      
+      const driverIds = [...new Set(assignments.map(a => {
+        const driverId = typeof a.driver_id === 'string' ? a.driver_id : a.driver_id?.id || String(a.driver_id);
+        return driverId;
+      }).filter(Boolean))];
       
       if (tourIds.length === 0) {
         setActiveTours([]);
@@ -63,6 +76,8 @@ export default function ActiveToursMonitor() {
       }
 
       console.log(`[ACTIVE_TOURS] Loading ${tourIds.length} tours and ${driverIds.length} drivers`);
+      console.log('[ACTIVE_TOURS] Tour IDs:', tourIds);
+      console.log('[ACTIVE_TOURS] Driver IDs:', driverIds);
 
       // Load tours, drivers, and tour stops in parallel
       const [toursData, driversData, allStopsData] = await Promise.all([
@@ -89,37 +104,42 @@ export default function ActiveToursMonitor() {
       const newDriversLocations = {};
       
       for (const assignment of assignments) {
-        const tour = toursMap.get(assignment.tour_id);
-        const driver = driversMap.get(assignment.driver_id);
-        const tourStops = stopsByTourId[assignment.tour_id] || [];
+        // Normalize IDs in case they're objects
+        const tourId = typeof assignment.tour_id === 'string' ? assignment.tour_id : assignment.tour_id?.id || String(assignment.tour_id);
+        const driverId = typeof assignment.driver_id === 'string' ? assignment.driver_id : assignment.driver_id?.id || String(assignment.driver_id);
+        
+        const tour = toursMap.get(tourId);
+        const driver = driversMap.get(driverId);
+        const tourStops = stopsByTourId[tourId] || [];
         
         if (!tour) {
-          console.warn(`[ACTIVE_TOURS] Tour ${assignment.tour_id} not found, skipping assignment ${assignment.id}`);
+          console.warn(`[ACTIVE_TOURS] Tour ${tourId} not found, skipping assignment ${assignment.id}`);
           continue;
         }
         
         let driverLocation = null;
-        if (assignment.driver_id) {
+        if (driverId) {
+          
           try {
             const driverLocationData = await DriverLocation.filter(
-              { driver_id: assignment.driver_id }, 
+              { driver_id: driverId }, 
               '-timestamp',
               1
             ) || [];
             
             if (driverLocationData.length > 0) {
               driverLocation = driverLocationData[0];
-              newDriversLocations[assignment.driver_id] = driverLocation;
-              console.log(`[ACTIVE_TOURS] Loaded location for driver ${assignment.driver_id}:`, {
+              newDriversLocations[driverId] = driverLocation;
+              console.log(`[ACTIVE_TOURS] Loaded location for driver ${driverId}:`, {
                 lat: driverLocation.latitude,
                 lng: driverLocation.longitude,
                 timestamp: driverLocation.timestamp
               });
             } else {
-              console.warn(`[ACTIVE_TOURS] No location found for driver ${assignment.driver_id}`);
+              console.warn(`[ACTIVE_TOURS] No location found for driver ${driverId}`);
             }
           } catch (locationError) {
-            console.error(`[ACTIVE_TOURS] Error loading location for driver ${assignment.driver_id}:`, locationError);
+            console.error(`[ACTIVE_TOURS] Error loading location for driver ${driverId}:`, locationError);
           }
         }
           
@@ -364,13 +384,23 @@ export default function ActiveToursMonitor() {
             )}
           </CardHeader>
           <CardContent className="pb-20 h-full">
-            <DriverTrackingMap 
-              tour={selectedTour} 
-              driverLocation={selectedTour?.driverLocation || driversLocations[selectedTour?.assignment?.driver_id]}
-              stops={selectedTour?.stops || []}
-              completedStops={selectedTour?.assignment?.completed_stops || []}
-              currentStopIndex={currentStopIndexForMap}
-            />
+            {selectedTour ? (
+              <DriverTrackingMap 
+                tour={selectedTour} 
+                driverLocation={selectedTour?.driverLocation || driversLocations[selectedTour?.assignment?.driver_id]}
+                stops={selectedTour?.stops || []}
+                completedStops={selectedTour?.assignment?.completed_stops || []}
+                currentStopIndex={currentStopIndexForMap}
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">Select a tour to view live tracking</p>
+                  <p className="text-sm">Choose an active tour from the list to see driver location and progress</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

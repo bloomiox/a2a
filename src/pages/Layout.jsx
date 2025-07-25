@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User } from "@/api/entities";
+import AppLogo from "@/components/common/AppLogo";
 import {
   Home,
   Compass, // Replaces Map
@@ -156,26 +157,61 @@ export default function Layout({ children, currentPageName }) {
   return (
     <LanguageProvider>
       <DesignSystemStyles />
-      {isLandingPage || isAuthPage || (!isLoggedIn && (isExploreOrSearchPage || isPlayPage)) ? (
-        <SimpleLayout
-          isLoggedIn={isLoggedIn}
-          navigate={navigate}
-          children={children}
-        />
-      ) : isPlayPage ? (
-        <PlayLayout children={children} />
-      ) : (
-        <MainLayout
-          currentPageName={currentPageName}
-          handleLogout={handleLogout}
-          children={children}
-          showDriverNav={showDriverNav}
-          showAdminNav={showAdminNav}
-          user={user}
-        />
-      )}
+      <LayoutContent
+        isLandingPage={isLandingPage}
+        isAuthPage={isAuthPage}
+        isLoggedIn={isLoggedIn}
+        isExploreOrSearchPage={isExploreOrSearchPage}
+        isPlayPage={isPlayPage}
+        navigate={navigate}
+        currentPageName={currentPageName}
+        handleLogout={handleLogout}
+        showDriverNav={showDriverNav}
+        showAdminNav={showAdminNav}
+        user={user}
+        children={children}
+      />
     </LanguageProvider>
   );
+}
+
+// Layout content component that's inside LanguageProvider
+function LayoutContent({ 
+  isLandingPage, 
+  isAuthPage, 
+  isLoggedIn, 
+  isExploreOrSearchPage, 
+  isPlayPage, 
+  navigate, 
+  currentPageName, 
+  handleLogout, 
+  showDriverNav, 
+  showAdminNav, 
+  user, 
+  children 
+}) {
+  if (isLandingPage || isAuthPage || (!isLoggedIn && (isExploreOrSearchPage || isPlayPage))) {
+    return (
+      <SimpleLayout
+        isLoggedIn={isLoggedIn}
+        navigate={navigate}
+        children={children}
+      />
+    );
+  } else if (isPlayPage) {
+    return <PlayLayout children={children} />;
+  } else {
+    return (
+      <MainLayout
+        currentPageName={currentPageName}
+        handleLogout={handleLogout}
+        children={children}
+        showDriverNav={showDriverNav}
+        showAdminNav={showAdminNav}
+        user={user}
+      />
+    );
+  }
 }
 
 // Simple layout for landing page and guest users
@@ -193,7 +229,7 @@ function SimpleLayout({ isLoggedIn, navigate, children }) {
                   <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                 </svg>
               </div>
-              <span className="text-xl font-bold text-gray-900">TurbaTours</span>
+              <AppLogo />
             </div>
           </Link>
 
@@ -267,7 +303,7 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
           const assignments = await TourAssignment.filter({
             driver_id: user.id,
             status: 'in_progress'
-          }, '-created_date', 1);
+          }, '-created_at', 1);
           
           if (assignments && assignments.length > 0) {
             setDriverTourId(assignments[0].tour_id);
@@ -348,7 +384,7 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
                   <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                 </svg>
               </div>
-              <span className="text-xl font-bold text-gray-900">TurbaTours</span>
+              <AppLogo />
             </div>
           </Link>
 

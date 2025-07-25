@@ -93,21 +93,54 @@ export default function DriverDashboard() {
   };
 
   const handleStartTour = async () => {
+    console.log('handleStartTour called');
+    console.log('selectedAssignment:', selectedAssignment);
+    console.log('startTourDetails:', startTourDetails);
+
     if (!selectedAssignment || !startTourDetails.vehicle_details || !startTourDetails.group_size) {
+      console.log('Missing required details, showing alert');
       alert("Please fill in all details.");
       return;
     }
 
+    console.log('Starting tour process...');
     setIsStartingTour(true);
     try {
-      await TourAssignment.update(selectedAssignment.id, {
+      console.log('Starting tour with assignment:', selectedAssignment);
+      console.log('Update data:', {
         status: 'in_progress',
         start_time: new Date().toISOString(),
         vehicle_details: startTourDetails.vehicle_details,
         group_size: parseInt(startTourDetails.group_size, 10),
       });
+
+      const updateData = {
+        status: 'in_progress',
+        start_time: new Date().toISOString(),
+        vehicle_details: startTourDetails.vehicle_details,
+        group_size: parseInt(startTourDetails.group_size, 10),
+      };
+
+      console.log('Updating assignment with ID:', selectedAssignment.id);
+      console.log('Update data:', updateData);
+
+      let updatedAssignment;
+      try {
+        updatedAssignment = await TourAssignment.update(selectedAssignment.id, updateData);
+        console.log('Assignment updated successfully:', updatedAssignment);
+      } catch (updateError) {
+        console.error('Error updating assignment:', updateError);
+        throw updateError;
+      }
+      
+      // Add a small delay to ensure the update is processed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const navigationUrl = `${createPageUrl('DriverNavigation')}?tourId=${selectedAssignment.tour_id}`;
+      console.log('Navigating to URL:', navigationUrl);
+
       setIsStartTourDialogOpen(false);
-      navigate(createPageUrl(`DriverNavigation?tourId=${selectedAssignment.tour_id}`));
+      navigate(navigationUrl);
     } catch (err) {
       console.error(t('driver.errorStartingTour'), err);
       alert(t('driver.errorStartingTour'));
@@ -173,7 +206,7 @@ export default function DriverDashboard() {
                 const tour = tours[assignment.tour_id];
                 return (
                   <div key={assignment.id} className="p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
-                       onClick={() => navigate(createPageUrl(`DriverNavigation?tourId=${tour.id}`))}>
+                       onClick={() => navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`)}>
                     <h3 className="text-lg font-semibold">{tour?.title || 'Loading...'}</h3>
                     <p className="text-muted-foreground text-sm mt-1">{tour?.description}</p>
                     <div className="flex justify-end mt-4">

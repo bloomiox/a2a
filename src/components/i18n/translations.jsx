@@ -140,7 +140,8 @@ const translations = {
         "tours": "Tours",
         "tourists": "Tourists",
         "activityLog": "Activity Log",
-        "systemErrors": "System Errors"
+        "systemErrors": "System Errors",
+        "appSettings": "App Settings"
       },
       "stats": {
         "totalUsers": "Total Users",
@@ -525,7 +526,8 @@ const translations = {
         tours: "Ture",
         tourists: "Turisti",
         activityLog: "Dnevnik Aktivnosti",
-        systemErrors: "Sistemske Greške"
+        systemErrors: "Sistemske Greške",
+        appSettings: "Postavke Aplikacije"
       },
       stats: {
         totalUsers: "Ukupno Korisnika",
@@ -1141,7 +1143,8 @@ const translations = {
         tours: "Turlar",
         tourists: "Turistler",
         activity: "Aktivite",
-        errors: "Sistem Hataları"
+        errors: "Sistem Hataları",
+        appSettings: "Uygulama Ayarları"
       },
       userManagement: "Toplam Kullanıcı",
       totalTours: "Toplam Tur",
@@ -1696,7 +1699,8 @@ const translations = {
         tours: "Turen",
         tourists: "Touristen",
         activity: "Aktivität",
-        errors: "Systemfehler"
+        errors: "Systemfehler",
+        appSettings: "App-Einstellungen"
       },
       userManagement: "Benutzer insgesamt",
       totalTours: "Touren insgesamt",

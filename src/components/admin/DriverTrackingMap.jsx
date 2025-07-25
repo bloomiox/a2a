@@ -88,6 +88,13 @@ const DriverTrackingMap = ({
           throw new Error('Invalid center coordinates');
         }
 
+        console.log('[MAP] Creating Mapbox map with center:', safeCenter);
+        console.log('[MAP] Map props:', { 
+          tour: tour?.title, 
+          driverLocation: driverLocation ? `${driverLocation.latitude}, ${driverLocation.longitude}` : 'None',
+          stopsCount: stops?.length || 0 
+        });
+        
         const map = new window.mapboxgl.Map({
           container: mapContainerRef.current,
           style: 'mapbox://styles/mapbox/streets-v11',
@@ -236,13 +243,16 @@ const DriverTrackingMap = ({
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative bg-gray-50">
       <div ref={mapContainerRef} className="h-full w-full" />
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center">
             <div className="h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Loading map...</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Tour: {tour?.title || 'None'} | Driver: {driverLocation ? 'Located' : 'No location'}
+            </p>
           </div>
         </div>
       )}

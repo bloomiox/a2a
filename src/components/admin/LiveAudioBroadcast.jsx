@@ -80,9 +80,27 @@ export default function LiveAudioBroadcast({ activeTours, onClose }) {
             setFailedChunks(0);
             console.log('[ADMIN] 🎤 Starting live broadcast...');
             
-            const sessionId = crypto.randomUUID();
+            // Start broadcast session through the service
+            console.log('[ADMIN] 🚀 Starting broadcast for:', {
+                tourId: selectedTour.tour_id,
+                driverId: selectedTour.assignment.driver_id,
+                selectedTour: selectedTour
+            });
+
+            const broadcastResponse = await audioRelay({
+                action: 'startBroadcast',
+                tourId: selectedTour.tour_id,
+                driverId: selectedTour.assignment.driver_id,
+                adminId: 'admin-user' // You might want to pass this as a prop
+            });
+
+            if (!broadcastResponse.data.success) {
+                throw new Error(broadcastResponse.data.error || 'Failed to start broadcast session');
+            }
+
+            const sessionId = broadcastResponse.data.sessionId;
             currentSessionRef.current = sessionId;
-            console.log('[ADMIN] ✓ Broadcast session created locally:', sessionId);
+            console.log('[ADMIN] ✓ Broadcast session created:', sessionId, 'for tour:', selectedTour.tour_id);
 
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
@@ -179,18 +197,14 @@ export default function LiveAudioBroadcast({ activeTours, onClose }) {
         try {
             console.log(`[ADMIN] Sending audio chunk: ${audioBlob.size} bytes`);
             
-            const base64Audio = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(audioBlob);
-            });
+            // Convert blob to array buffer for the new service
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioData = new Uint8Array(arrayBuffer);
             
             const response = await audioRelay({
                 action: 'sendAudio',
                 sessionId: currentSessionRef.current,
-                driverId: selectedTour.assignment.driver_id,
-                audioData: base64Audio,
+                audioData: Array.from(audioData),
                 mimeType: mimeType
             });
 
@@ -250,7 +264,8 @@ export default function LiveAudioBroadcast({ activeTours, onClose }) {
                 console.log('[ADMIN] 📡 Sending broadcast stop signal for session:', sessionIdToStop);
                 await audioRelay({
                     action: 'stopBroadcast',
-                    sessionId: sessionIdToStop
+                    sessionId: sessionIdToStop,
+                    tourId: selectedTour?.tour_id
                 });
                 console.log('[ADMIN] ✓ Broadcast stop signal sent successfully.');
             } catch (error) {

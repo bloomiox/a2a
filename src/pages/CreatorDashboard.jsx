@@ -57,19 +57,48 @@ export default function CreatorDashboard() {
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState("all");
   const [selectedMetric, setSelectedMetric] = useState("plays");
+  const [user, setUser] = useState(null);
 
+  // Get current user on component mount
   useEffect(() => {
-    loadAnalytics();
-  }, [dateRange]);
+    const getCurrentUser = async () => {
+      try {
+        const userData = await User.me();
+        setUser(userData);
+        console.log('Current user for CreatorDashboard:', userData);
+      } catch (error) {
+        console.error('Error getting current user:', error);
+        setError('Failed to authenticate user');
+      }
+    };
+    
+    getCurrentUser();
+  }, []);
+
+  // Load analytics when user or dateRange changes
+  useEffect(() => {
+    if (user && user.id) {
+      loadAnalytics();
+    }
+  }, [user, dateRange]);
 
   const loadAnalytics = async () => {
+    if (!user || !user.id) {
+      console.log('No user available for analytics');
+      return;
+    }
+
     try {
       setLoading(true);
-      const { data } = await getCreatorAnalytics({ dateRange });
+      setError(null);
+      console.log('Loading analytics for user:', user.id, 'dateRange:', dateRange);
+      
+      const data = await getCreatorAnalytics({ userId: user.id, dateRange });
       setAnalytics(data);
+      console.log('Analytics loaded successfully:', data);
     } catch (error) {
       console.error("Error loading analytics:", error);
-      setError("Failed to load analytics data");
+      setError("Failed to load analytics data: " + error.message);
     } finally {
       setLoading(false);
     }

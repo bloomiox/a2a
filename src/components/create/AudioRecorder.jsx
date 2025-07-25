@@ -106,12 +106,23 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
     if (!file) return;
     
     setIsUploading(true);
-    console.log("Uploading audio file:", file);
+    console.log("Uploading audio file:", {
+      file,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      hasName: !!file.name
+    });
     
     try {
-      // Use FormData to properly upload the file
-      const { file_url } = await UploadFile({ file });
-      console.log("File uploaded successfully, URL:", file_url);
+      // Upload the audio file using the dedicated audio upload function
+      const result = await UploadFile(file, { bucket: 'audio-files' });
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Audio upload failed');
+      }
+      
+      console.log("File uploaded successfully, URL:", result.url);
       
       // Get duration of the audio file
       const audio = new Audio();
@@ -122,7 +133,7 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
         console.log("Audio duration:", duration);
         
         // Update the audio track data
-        onAudioChange(stopIndex, audioIndex, "audio_url", file_url);
+        onAudioChange(stopIndex, audioIndex, "audio_url", result.url);
         onAudioChange(stopIndex, audioIndex, "duration", duration);
         
         setIsUploading(false);

@@ -113,15 +113,31 @@ export default function DriverNavigation() {
                 const currentUser = await User.me();
                 setDriver(currentUser);
 
+                console.log('Fetching data for tourId:', tourId, 'and driver:', currentUser.id);
+
+                // First, let's see all assignments for this tour and driver
+                const allAssignments = await TourAssignment.filter({ tour_id: tourId, driver_id: currentUser.id });
+                console.log('All assignments for this tour and driver:', allAssignments);
+
                 const [tourData, stopsData, assignmentData, audioTracksData] = await Promise.all([
                     Tour.get(tourId),
                     TourStop.filter({ tour_id: tourId }, 'position'),
-                    TourAssignment.filter({ tour_id: tourId, driver_id: currentUser.id, status: 'in_progress' }, '-created_date', 1),
+                    TourAssignment.filter({ tour_id: tourId, driver_id: currentUser.id, status: 'in_progress' }, '-created_at', 1),
                     AudioTrack.filter({ tour_id: tourId })
                 ]);
 
+                console.log('Fetched data:', {
+                    tourData,
+                    stopsData: stopsData?.length || 0,
+                    assignmentData: assignmentData?.length || 0,
+                    audioTracksData: audioTracksData?.length || 0
+                });
+
                 if (!tourData) throw new Error(t('driver.navigation.tourNotFound'));
-                if (!assignmentData || assignmentData.length === 0) throw new Error(t('driver.navigation.assignmentNotFound'));
+                if (!assignmentData || assignmentData.length === 0) {
+                    console.error('No assignment found with status in_progress for tour:', tourId, 'and driver:', currentUser.id);
+                    throw new Error(t('driver.navigation.assignmentNotFound'));
+                }
 
                 setTour(tourData);
                 setStops(stopsData || []);

@@ -188,73 +188,182 @@ function parseCSV(csvData) {
 }
 
 // Get creator analytics
-export const getCreatorAnalytics = async ({ userId }) => {
+export const getCreatorAnalytics = async ({ userId, dateRange = 'all' }) => {
   try {
-    // Try to use the RPC function first
-    try {
-      const { data, error } = await supabase.rpc('get_creator_analytics', { p_user_id: userId });
-      if (!error && data) {
-        return data;
-      }
-    } catch (rpcError) {
-      console.warn('RPC function not available, using mock data:', rpcError);
+    console.log('Getting creator analytics for user:', userId, 'Type:', typeof userId);
+
+    // Validate userId parameter
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      console.error('Invalid userId provided:', userId);
+      throw new Error('Valid userId is required for analytics');
     }
 
-    // If RPC fails or doesn't exist, use mock data
-    console.log('Using mock analytics data for user:', userId);
+    // Check if userId is a valid UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      console.error('Invalid UUID format for userId:', userId);
+      throw new Error('userId must be a valid UUID');
+    }
 
-    // Get user's tours
-    const { data: userTours } = await supabase
+    // Get user's tours with related data
+    const { data: userTours, error: toursError } = await supabase
       .from('tours')
       .select('*')
       .eq('created_by', userId);
 
-    const tours = userTours || [];
+    if (toursError) {
+      console.error('Error fetching user tours:', toursError);
+      throw toursError;
+    }
 
-    // Generate mock data that matches what the CreatorDashboard component expects
+    const tours = userTours || [];
+    console.log(`Found ${tours.length} tours for user`);
+
+    // Get user progress data for all user's tours
+    const tourIds = tours.map(tour => tour.id);
+    let userProgressData = [];
+    let tourAssignments = [];
+    let tourReviews = [];
+
+    if (tourIds.length > 0) {
+      // Get user progress for analytics
+      const { data: progressData } = await supabase
+        .from('user_progress')
+        .select('*')
+        .in('tour_id', tourIds);
+
+      userProgressData = progressData || [];
+
+      // Get tour assignments for play count
+      const { data: assignmentData } = await supabase
+        .from('tour_assignments')
+        .select('*')
+        .in('tour_id', tourIds);
+
+      tourAssignments = assignmentData || [];
+
+      // Get tour reviews for ratings
+      const { data: reviewData } = await supabase
+        .from('tour_reviews')
+        .select('*')
+        .in('tour_id', tourIds);
+
+      tourReviews = reviewData || [];
+    }
+
+    // Calculate real analytics from database data
+    const totalPlays = userProgressData.length;
+    const totalAssignments = tourAssignments.length;
+    const completedTours = userProgressData.filter(progress =>
+      progress.completed_stops && progress.completed_stops.length > 0
+    ).length;
+
+    // Calculate average rating from reviews
+    const totalReviews = tourReviews.length;
+    const averageRating = totalReviews > 0
+      ? tourReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / totalReviews
+      : 0;
+
+    // Calculate completion rate
+    const overallCompletionRate = totalPlays > 0
+      ? Math.round((completedTours / totalPlays) * 100)
+      : 0;
+
     return {
       totalTours: tours.length,
-      totalPlays: Math.floor(Math.random() * 500) + 100,
-      totalDownloads: Math.floor(Math.random() * 200) + 50,
-      averageRating: 4.5,
-      totalReviews: Math.floor(Math.random() * 50) + 10,
+      totalPlays: totalPlays,
+      totalDownloads: totalAssignments, // Using assignments as downloads
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+      totalReviews: totalReviews,
 
-      // Generate mock tour metrics
-      tourMetrics: tours.map(tour => ({
-        tourId: tour.id,
-        tourTitle: tour.title,
-        createdDate: tour.created_date || new Date().toISOString(),
-        totalPlays: Math.floor(Math.random() * 100) + 10,
-        totalDownloads: Math.floor(Math.random() * 50) + 5,
-        completionRate: Math.floor(Math.random() * 60) + 40,
-        averageRating: (Math.random() * 2) + 3,
-        totalReviews: Math.floor(Math.random() * 20) + 1
-      })),
+      // Calculate real tour metrics
+      tourMetrics: tours.map(tour => {
+        const tourProgress = userProgressData.filter(p => p.tour_id === tour.id);
+        const tourAssignmentCount = tourAssignments.filter(a => a.tour_id === tour.id).length;
+        const tourReviewsForTour = tourReviews.filter(r => r.tour_id === tour.id);
+        const tourCompletions = tourProgress.filter(p =>
+          p.completed_stops && p.completed_stops.length > 0
+        ).length;
 
-      // Generate mock rating trends (last 6 months)
-      ratingTrends: Array.from({ length: 6 }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - 5 + i);
+        const tourAvgRating = tourReviewsForTour.length > 0
+          ? tourReviewsForTour.reduce((sum, review) => sum + (review.rating || 0), 0) / tourReviewsForTour.length
+          : 0;
+
+        const tourCompletionRate = tourProgress.length > 0
+          ? Math.round((tourCompletions / tourProgress.length) * 100)
+          : 0;
+
         return {
-          month: date.toLocaleString('default', { month: 'short' }),
-          averageRating: (Math.random() * 1.5) + 3.5
+          tourId: tour.id,
+          tourTitle: tour.title,
+          createdDate: tour.created_at || new Date().toISOString(),
+          totalPlays: tourProgress.length,
+          totalDownloads: tourAssignmentCount,
+          completionRate: tourCompletionRate,
+          averageRating: Math.round(tourAvgRating * 10) / 10,
+          totalReviews: tourReviewsForTour.length
         };
       }),
 
-      // Overall completion rate
-      overallCompletionRate: Math.floor(Math.random() * 30) + 70,
+      // Calculate rating trends from reviews (last 6 months)
+      ratingTrends: (() => {
+        const trends = [];
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+          const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
-      // Popular stops
-      popularStops: Array.from({ length: 5 }, (_, i) => ({
-        stopId: `stop-${i + 1}`,
-        stopTitle: `Popular Stop ${i + 1}`,
+          const monthReviews = tourReviews.filter(review => {
+            const reviewDate = new Date(review.created_at);
+            return reviewDate >= monthStart && reviewDate <= monthEnd;
+          });
+
+          const monthAvgRating = monthReviews.length > 0
+            ? monthReviews.reduce((sum, review) => sum + (review.rating || 0), 0) / monthReviews.length
+            : 0;
+
+          trends.push({
+            month: date.toLocaleString('default', { month: 'short' }),
+            averageRating: Math.round(monthAvgRating * 10) / 10
+          });
+        }
+        return trends;
+      })(),
+
+      // Overall completion rate
+      overallCompletionRate: overallCompletionRate,
+
+      // Popular stops (placeholder - would need more complex query to determine actual popularity)
+      popularStops: tours.slice(0, 5).map((tour, i) => ({
+        stopId: `tour-${tour.id}`,
+        stopTitle: tour.title || `Tour ${i + 1}`,
         tourTitle: tours[i % tours.length]?.title || `Tour ${i + 1}`,
         visitCount: Math.floor(Math.random() * 100) + 50
       }))
     };
   } catch (error) {
     console.error('Error getting creator analytics:', error);
-    throw error;
+
+    // Return minimal data structure on error
+    return {
+      totalTours: 0,
+      totalPlays: 0,
+      totalDownloads: 0,
+      averageRating: 0,
+      totalReviews: 0,
+      tourMetrics: [],
+      ratingTrends: Array.from({ length: 6 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - 5 + i);
+        return {
+          month: date.toLocaleString('default', { month: 'short' }),
+          averageRating: 0
+        };
+      }),
+      overallCompletionRate: 0,
+      popularStops: []
+    };
   }
 };
 
@@ -270,9 +379,11 @@ export const downloadTourAsPlaylist = async ({ tourId }) => {
   };
 };
 
-// Audio relay function with support for getActiveTours
-export const audioRelay = async ({ action, message, tourId, driverId }) => {
-  console.log('Audio relay:', { action, message, tourId, driverId });
+import liveBroadcastService from '../services/LiveBroadcastService.js';
+
+// Audio relay function with enhanced live broadcast support
+export const audioRelay = async ({ action, tourId, driverId, sessionId, audioData, mimeType, adminId }) => {
+  console.log('Audio relay called:', { action, tourId, driverId, sessionId, audioDataSize: audioData?.length || 0 });
 
   // Handle different actions
   if (action === 'getActiveTours') {
@@ -350,8 +461,266 @@ export const audioRelay = async ({ action, message, tourId, driverId }) => {
     }
   }
 
-  // Default response for other actions
-  return { success: true };
+  // Handle startBroadcast action
+  if (action === 'startBroadcast') {
+    try {
+      console.log('Starting broadcast for tour:', tourId, 'driver:', driverId);
+
+      if (!tourId || !driverId) {
+        return {
+          status: 400,
+          data: {
+            success: false,
+            error: 'Missing required parameters: tourId or driverId'
+          }
+        };
+      }
+
+      const result = liveBroadcastService.startBroadcast(tourId, driverId, adminId);
+
+      return {
+        status: result.success ? 200 : 400,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error starting broadcast:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle sendAudio action
+  if (action === 'sendAudio') {
+    try {
+      console.log('Processing sendAudio request for session:', sessionId);
+
+      if (!sessionId || !audioData) {
+        return {
+          status: 400,
+          data: {
+            success: false,
+            error: 'Missing required parameters: sessionId or audioData'
+          }
+        };
+      }
+
+      const result = liveBroadcastService.sendAudioChunk(sessionId, audioData, mimeType);
+
+      return {
+        status: result.success ? 200 : 400,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle getAudio action (for driver to receive audio)
+  if (action === 'getAudio') {
+    try {
+      console.log('Processing getAudio request for driver:', driverId, 'tour:', tourId);
+
+      if (!driverId || !tourId) {
+        return {
+          status: 400,
+          data: {
+            success: false,
+            error: 'Missing required parameters: driverId or tourId'
+          }
+        };
+      }
+
+      const result = liveBroadcastService.getAudioChunks(driverId, tourId);
+
+      return {
+        status: 200,
+        data: {
+          ...result,
+          driverId,
+          tourId
+        }
+      };
+    } catch (error) {
+      console.error('Error getting audio:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message,
+          chunks: [],
+          sessionId: null,
+          status: 'error'
+        }
+      };
+    }
+  }
+
+  // Handle getBroadcastStatus action
+  if (action === 'getBroadcastStatus') {
+    try {
+      const result = liveBroadcastService.getBroadcastStatus(tourId, sessionId, driverId);
+
+      return {
+        status: result.success ? 200 : 500,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error getting broadcast status:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle getActiveBroadcasts action
+  if (action === 'getActiveBroadcasts') {
+    try {
+      const result = liveBroadcastService.getActiveBroadcasts();
+
+      return {
+        status: result.success ? 200 : 500,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error getting active broadcasts:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message,
+          broadcasts: []
+        }
+      };
+    }
+  }
+
+  // Handle getDebugInfo action
+  if (action === 'getDebugInfo') {
+    try {
+      const debugInfo = liveBroadcastService.getDebugInfo();
+
+      return {
+        status: 200,
+        data: {
+          success: true,
+          debugInfo
+        }
+      };
+    } catch (error) {
+      console.error('Error getting debug info:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle getActiveBroadcastForTour action
+  if (action === 'getActiveBroadcastForTour') {
+    try {
+      const broadcast = liveBroadcastService.getActiveBroadcastForTour(tourId);
+
+      return {
+        status: 200,
+        data: {
+          success: true,
+          broadcast
+        }
+      };
+    } catch (error) {
+      console.error('Error getting active broadcast for tour:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle forceDriverToBroadcast action
+  if (action === 'forceDriverToBroadcast') {
+    try {
+      const result = liveBroadcastService.forceDriverToBroadcast(driverId, sessionId);
+
+      return {
+        status: result.success ? 200 : 400,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error forcing driver to broadcast:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Handle other actions
+  if (action === 'startSession') {
+    return {
+      status: 200,
+      data: {
+        success: true,
+        sessionId: 'session-' + Date.now(),
+        message: 'Audio session started'
+      }
+    };
+  }
+
+  if (action === 'endSession' || action === 'stopBroadcast') {
+    try {
+      console.log('Processing stopBroadcast for session:', sessionId, 'tour:', tourId);
+
+      const result = liveBroadcastService.stopBroadcast(sessionId, tourId);
+
+      return {
+        status: result.success ? 200 : 400,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error stopping broadcast:', error);
+      return {
+        status: 500,
+        data: {
+          success: false,
+          error: error.message
+        }
+      };
+    }
+  }
+
+  // Default response for unknown actions
+  return {
+    status: 400,
+    data: {
+      success: false,
+      error: `Unknown action: ${action}`
+    }
+  };
 };
 
 // Audio WebSocket function (placeholder for compatibility)

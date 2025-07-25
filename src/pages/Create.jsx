@@ -272,22 +272,27 @@ export default function Create() {
       console.log("Uploading CSV file:", file.name);
       
       // Upload the file first
-      const { file_url } = await UploadFile({ file });
-      console.log("CSV uploaded successfully:", file_url);
+      const result = await UploadFile(file);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'CSV upload failed');
+      }
+      
+      console.log("CSV uploaded successfully:", result.url);
 
-      // Define the enhanced JSON schema for stops data with all import fields
+      // Define the JSON schema for stops data matching the actual database schema
       const stopsSchema = {
         type: "array",
         items: {
           type: "object",
           properties: {
-            title: { type: "string" },
+            name: { type: "string" },
             description: { type: "string" },
             address: { type: "string" },
             latitude: { type: "number" },
             longitude: { type: "number" },
-            trigger_radius: { type: "number" },
-            estimated_time: { type: "number" },
+            duration_minutes: { type: "number" },
+            order_in_tour: { type: "number" },
             preview_image_url: { type: "string" },
             gallery_images: { type: "string" },
             gallery_videos: { type: "string" },
@@ -312,13 +317,13 @@ export default function Create() {
             audio_chinese_url: { type: "string" },
             audio_chinese_transcript: { type: "string" }
           },
-          required: ["title", "description", "address"]
+          required: ["name", "description", "address"]
         }
       };
 
       // Extract data from the uploaded CSV
       const extractResult = await ExtractDataFromUploadedFile({
-        file_url: file_url,
+        file_url: result.url,
         json_schema: stopsSchema
       });
 
@@ -386,7 +391,7 @@ export default function Create() {
         }
 
         return {
-          title: csvStop.title || `${t('create.stop')} ${stops.length + index + 1}`,
+          title: csvStop.name || `${t('create.stop')} ${stops.length + index + 1}`,
           description: csvStop.description || "",
           position: stops.length + index,
           location: {
@@ -394,9 +399,9 @@ export default function Create() {
             longitude: csvStop.longitude || null,
             address: csvStop.address || ""
           },
-          trigger_radius: csvStop.trigger_radius || 50,
+          trigger_radius: 50, // Default value since it's not in the database schema
           preview_image: csvStop.preview_image_url || "",
-          estimated_time: csvStop.estimated_time || 5,
+          estimated_time: csvStop.duration_minutes || 5,
           audio_tracks: audioTracks,
           gallery: [...galleryImages, ...galleryVideos]
         };
@@ -420,9 +425,9 @@ export default function Create() {
   };
 
   const downloadCsvTemplate = () => {
-    const csvTemplate = `title,description,address,latitude,longitude,trigger_radius,estimated_time,preview_image_url,gallery_images,gallery_videos,audio_english_url,audio_english_transcript,audio_spanish_url,audio_spanish_transcript,audio_french_url,audio_french_transcript,audio_german_url,audio_german_transcript,audio_bosnian_url,audio_bosnian_transcript,audio_turkish_url,audio_turkish_transcript,audio_arabic_url,audio_arabic_transcript,audio_italian_url,audio_italian_transcript,audio_japanese_url,audio_japanese_transcript,audio_chinese_url,audio_chinese_transcript
-"${t('create.templateStop1Title')}","${t('create.templateStop1Description')}","${t('create.templateStop1Address')}",40.785091,-73.968285,50,10,"","","","","${t('create.templateStop1AudioTranscript')}","","","","","","","","","","","","","","","","","",""
-"${t('create.templateStop2Title')}","${t('create.templateStop2Description')}","${t('create.templateStop2Address')}",40.758896,-73.985130,75,15,"","","","","${t('create.templateStop2AudioTranscript')}","","","","","","","","","","","","","","","","","",""
+    const csvTemplate = `name,description,address,latitude,longitude,duration_minutes,order_in_tour,preview_image_url,gallery_images,gallery_videos,audio_english_url,audio_english_transcript,audio_spanish_url,audio_spanish_transcript,audio_french_url,audio_french_transcript,audio_german_url,audio_german_transcript,audio_bosnian_url,audio_bosnian_transcript,audio_turkish_url,audio_turkish_transcript,audio_arabic_url,audio_arabic_transcript,audio_italian_url,audio_italian_transcript,audio_japanese_url,audio_japanese_transcript,audio_chinese_url,audio_chinese_transcript
+"${t('create.templateStop1Title')}","${t('create.templateStop1Description')}","${t('create.templateStop1Address')}",40.785091,-73.968285,10,1,"","","","","${t('create.templateStop1AudioTranscript')}","","","","","","","","","","","","","","","","","",""
+"${t('create.templateStop2Title')}","${t('create.templateStop2Description')}","${t('create.templateStop2Address')}",40.758896,-73.985130,15,2,"","","","","${t('create.templateStop2AudioTranscript')}","","","","","","","","","","","","","","","","","",""
 "${t('create.templateStop3Title')}","${t('create.templateStop3Description')}","${t('create.templateStop3Address')}",40.706086,-73.996864,100,20,"","","","","${t('create.templateStop3AudioTranscript')}","","","","","","","","","","","","","","","","","",""`;
     
     const blob = new Blob([csvTemplate], { type: 'text/csv' });
@@ -498,13 +503,13 @@ export default function Create() {
 
       // Enhanced CSV Headers - including all fields needed for import
       const csvHeaders = [
-        'title',
+        'name',
         'description', 
         'address',
         'latitude',
         'longitude',
-        'trigger_radius',
-        'estimated_time',
+        'duration_minutes',
+        'order_in_tour',
         'preview_image_url',
         'gallery_images',
         'gallery_videos',
@@ -571,8 +576,8 @@ export default function Create() {
           escapeCSV(stop.location?.address || ''),
           stop.location?.latitude || '',
           stop.location?.longitude || '',
-          stop.trigger_radius || 50,
-          stop.estimated_time || 5,
+          stop.estimated_time || 5, // duration_minutes
+          stop.position || index + 1, // order_in_tour
           escapeCSV(stop.preview_image || ''),
           escapeCSV(images),
           escapeCSV(videos),
@@ -773,14 +778,21 @@ export default function Create() {
       
       setIsSubmitting(true);
       
-      const { file_url } = await UploadFile({ file });
+      const result = await UploadFile(file);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
       
       setTour(prev => ({
         ...prev,
-        preview_image: file_url
+        preview_image: result.url
       }));
       
-      console.log("Image uploaded successfully:", file_url);
+      // Update the preview URL to the uploaded URL
+      setPreviewImageUrl(result.url);
+      
+      console.log("Image uploaded successfully:", result.url);
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Failed to upload image. Please try again.");
@@ -796,11 +808,16 @@ export default function Create() {
     console.log(`Uploading image for stop #${stopIndex + 1}:`, file);
     
     try {
-      const { file_url } = await UploadFile({ file });
-      console.log("Image uploaded successfully, URL:", file_url);
+      const result = await UploadFile(file);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Stop image upload failed');
+      }
+      
+      console.log("Image uploaded successfully, URL:", result.url);
       
       const newStops = [...stops];
-      newStops[stopIndex].preview_image = file_url;
+      newStops[stopIndex].preview_image = result.url;
       setStops(newStops);
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -1555,8 +1572,8 @@ export default function Create() {
                     <li><strong>description</strong>: {t('create.csvDescriptionDesc')}</li>
                     <li><strong>address</strong>: {t('create.csvAddressDesc')}</li>
                     <li><strong>latitude/longitude</strong>: {t('create.csvCoordinatesDesc')}</li>
-                    <li><strong>trigger_radius</strong>: {t('create.csvRadiusDesc')}</li>
-                    <li><strong>estimated_time</strong>: {t('create.csvTimeDesc')}</li>
+                    <li><strong>duration_minutes</strong>: {t('create.csvTimeDesc')}</li>
+                    <li><strong>order_in_tour</strong>: Order/sequence of the stop in the tour</li>
                     <li><strong>preview_image_url</strong>: {t('create.csvImageDesc')}</li>
                     <li><strong>gallery_images</strong>: {t('create.csvGalleryImagesDesc')}</li>
                     <li><strong>gallery_videos</strong>: {t('create.csvGalleryVideosDesc')}</li>

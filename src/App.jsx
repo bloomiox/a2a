@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ensureSchemaUpToDate } from '@/utils/schemaManager'
 import { toast } from "@/components/ui/use-toast"
 import initializeLogging from '@/services/LoggingInitializer'
+import { AppSettings } from '@/api/entities'
 
 function App() {
   const [schemaChecked, setSchemaChecked] = useState(false);
@@ -12,6 +13,18 @@ function App() {
   useEffect(() => {
     // Initialize logging system
     initializeLogging();
+    
+    // Load and apply app settings
+    const loadAppSettings = async () => {
+      try {
+        const settings = await AppSettings.get();
+        if (settings) {
+          AppSettings.apply(settings);
+        }
+      } catch (error) {
+        console.error('Error loading app settings:', error);
+      }
+    };
     
     // Check and update the schema when the application starts
     const checkSchema = async () => {
@@ -35,6 +48,7 @@ function App() {
       }
     };
     
+    loadAppSettings();
     checkSchema();
   }, []);
   

@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* App Settings - Default Colors */
+  --primary: 249 115 22; /* #f97316 in RGB */
+  --primary-foreground: 255 255 255;
+  --secondary: 100 116 139; /* #64748b in RGB */
+  --secondary-foreground: 255 255 255;
+  --accent: 249 115 22; /* Same as primary for buttons */
+  --accent-foreground: 255 255 255;
+}
+
 
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

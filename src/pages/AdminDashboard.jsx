@@ -71,6 +71,9 @@ import { Progress } from "@/components/ui/progress";
 import ActiveToursMonitor from '../components/admin/ActiveToursMonitor';
 import LiveAudioBroadcast from '../components/admin/LiveAudioBroadcast';
 import AdminAnalytics from '../components/admin/AdminAnalytics';
+import SystemLogs from '../components/admin/SystemLogs';
+import AppSettings from '../components/admin/AppSettings';
+import BroadcastDebugPanel from '../components/debug/BroadcastDebugPanel';
 import { useLanguage } from '@/components/i18n/LanguageContext';
 import { DriverLocation } from "@/api/entities";
 import { TourStop } from "@/api/entities";
@@ -105,7 +108,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [tours, setTours] = useState([]);
   const [userActivity, setUserActivity] = useState([]);
-  const [errors, setErrors] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -168,38 +171,38 @@ export default function AdminDashboard() {
     try {
       // Load active tours directly instead of using audioRelay function
       const assignments = await TourAssignment.filter({ status: 'in_progress' }) || [];
-      
+
       if (assignments.length === 0) {
         setActiveToursForBroadcast([]);
         return;
       }
-      
+
       const tourIds = [...new Set(assignments.map(a => a.tour_id).filter(Boolean))];
       const driverIds = [...new Set(assignments.map(a => a.driver_id).filter(Boolean))];
-      
+
       const [toursData, driversData] = await Promise.all([
         tourIds.length > 0 ? Tour.filter({ id: { $in: tourIds } }) || [] : [],
         driverIds.length > 0 ? User.filter({ id: { $in: driverIds } }) || [] : []
       ]);
-      
+
       // Use native JavaScript Map constructor (not the lucide-react icon)
       const toursMap = new window.Map(toursData.map(t => [t.id, t]));
       const driversMap = new window.Map(driversData.map(d => [d.id, d]));
-      
+
       const activeTours = assignments.map(assignment => ({
         tour_id: assignment.tour_id,
         driver_id: assignment.driver_id,
         tour: toursMap.get(assignment.tour_id),
-        driver: driversMap.get(assignment.driver_id) || { 
-          id: assignment.driver_id, 
+        driver: driversMap.get(assignment.driver_id) || {
+          id: assignment.driver_id,
           full_name: `Driver ${assignment.driver_id.slice(-4)}`
         },
         assignment: assignment
       })).filter(item => item.tour); // Filter out items where the tour object is missing
-      
+
       setActiveToursForBroadcast(activeTours);
       console.log(`[ADMIN] Loaded ${activeTours.length} active tours for broadcast`);
-      
+
     } catch (error) {
       console.error("Error loading active tours for broadcast:", error);
       setActiveToursForBroadcast([]);
@@ -210,26 +213,26 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Use filter() instead of list() to get all data reliably
-      const usersData = await User.filter({}, '-created_date', 1000) || [];
-      const toursData = await Tour.filter({}, '-created_date', 1000) || [];
-      
+      const usersData = await User.filter({}, '-created_at', 1000) || [];
+      const toursData = await Tour.filter({}, '-created_at', 1000) || [];
+
       console.log("Loaded users:", usersData.length);
       console.log("Loaded tours:", toursData.length);
-      
-      const assignmentsData = await TourAssignment.filter({}, '-created_date', 1000) || [];
-      const userProgressData = await UserProgress.filter({}, '-created_date', 1000) || [];
-      
+
+      const assignmentsData = await TourAssignment.filter({}, '-created_at', 1000) || [];
+      const userProgressData = await UserProgress.filter({}, '-created_at', 1000) || [];
+
       setUsers(usersData);
       setTours(toursData);
-      
+
       const completedTourAssignments = assignmentsData.filter(a => a.status === 'completed');
 
       let activeUsersCount = 0;
       try {
-        const activeUsers = await User.filter({ 
-          last_active_date: { $gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() } 
+        const activeUsers = await User.filter({
+          last_active_date: { $gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }
         });
         activeUsersCount = activeUsers.length;
       } catch (error) {
@@ -245,32 +248,19 @@ export default function AdminDashboard() {
 
       setUserActivity(userProgressData);
       setAssignments(assignmentsData);
-      
+
       const driverUsers = usersData.filter(user => (user.user_group || []).includes("Driver"));
       setDrivers(driverUsers);
       console.log("Found drivers:", driverUsers);
-      
+
       const touristUsers = usersData.filter(user => (user.user_group || []).includes("Tourist"));
       setTourists(touristUsers);
-      
+
       setBookings([]); // Placeholder for bookings
 
-      setErrors([]); // Assuming errors are loaded or cleared on dashboard data load
-      
     } catch (err) {
       console.error("Critical error in loadDashboardData:", err);
       setError(t("admin.errorLoadingDashboard") || "Error loading dashboard data");
-      // Example of setting a dummy error for display if actual error logging is not implemented
-      setErrors(prevErrors => [
-        ...prevErrors,
-        {
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-          type: "FetchError",
-          message: err.message || "Failed to load dashboard data.",
-          details: `Error loading: ${err.message || "Unknown error"} at ${err.stack || "No stack trace"}`
-        }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -280,17 +270,17 @@ export default function AdminDashboard() {
     // This is now handled in loadDashboardData, but we keep the function in case it's used elsewhere.
     // If called independently, it would re-filter from the already loaded 'users' state.
     if (!drivers.length && users.length) {
-       const driverUsers = users.filter(user => (user.user_group || []).includes("Driver"));
-       setDrivers(driverUsers);
+      const driverUsers = users.filter(user => (user.user_group || []).includes("Driver"));
+      setDrivers(driverUsers);
     }
   };
-  
+
   const loadTouristsSafely = async () => {
     // This is now handled in loadDashboardData
     // If called independently, it would re-filter from the already loaded 'users' state.
     if (!tourists.length && users.length) {
-       const touristUsers = users.filter(user => (user.user_group || []).includes("Tourist"));
-       setTourists(touristUsers);
+      const touristUsers = users.filter(user => (user.user_group || []).includes("Tourist"));
+      setTourists(touristUsers);
     }
   };
 
@@ -302,27 +292,27 @@ export default function AdminDashboard() {
       setBookings([]);
     }
   };
-  
+
   const handleShowTracking = async (tour) => {
     if (!tour || !tour.id) {
-        alert(t("admin.tracking.invalidTourData"));
-        return;
+      alert(t("admin.tracking.invalidTourData"));
+      return;
     }
-    
+
     try {
-      const freshTour = await Tour.get(tour.id); 
+      const freshTour = await Tour.get(tour.id);
       if (!freshTour) {
         alert(t("admin.tracking.tourNotFound"));
         loadDashboardData(); // Refresh dashboard to remove stale data
         return;
       }
-      
+
       const driverLocData = await DriverLocation.filter(
-        { driver_id: freshTour.assignment?.driver_id }, 
-        '-timestamp', 
+        { driver_id: freshTour.assignment?.driver_id },
+        '-timestamp',
         1
       ) || [];
-      
+
       if (driverLocData.length > 0) {
         setDriversLocations(prev => ({ ...prev, [freshTour.assignment.driver_id]: driverLocData[0] }));
       }
@@ -342,10 +332,10 @@ export default function AdminDashboard() {
 
   const handleAssignTour = async (tourId, driverId, assignmentStartTime) => {
     if (!tourId) {
-        alert(t("admin.assignment.missingTourId"));
-        return;
+      alert(t("admin.assignment.missingTourId"));
+      return;
     }
-    
+
     try {
       const tourExists = await Tour.get(tourId);
       if (!tourExists) {
@@ -353,18 +343,18 @@ export default function AdminDashboard() {
         loadDashboardData();
         return;
       }
-      
+
       // Check if there's already an active assignment for this tour
       const existingAssignments = await TourAssignment.filter({
         tour_id: tourId,
         status: { $in: ['assigned', 'in_progress'] }
       });
-      
+
       if (existingAssignments.length > 0) {
         alert(t("admin.assignment.tourAlreadyAssigned"));
         return;
       }
-      
+
       await TourAssignment.create({
         tour_id: tourId,
         driver_id: driverId,
@@ -373,7 +363,7 @@ export default function AdminDashboard() {
         completed_stops: [],
         notes: `Assigned by admin on ${new Date().toLocaleString()}`
       });
-      
+
       alert(t("admin.assignment.assignmentSuccess"));
       loadDashboardData();
       setShowAssignDialog(false);
@@ -395,13 +385,13 @@ export default function AdminDashboard() {
     if (!confirm(t("admin.assignment.confirmUnassign"))) {
       return;
     }
-    
+
     try {
       if (assignment.status === 'in_progress') {
         alert(t("admin.assignment.cannotUnassignInProgress"));
         return;
       }
-      
+
       await TourAssignment.delete(assignment.id);
       alert(t("admin.assignment.unassignSuccess"));
       loadDashboardData();
@@ -414,13 +404,13 @@ export default function AdminDashboard() {
   const handleUpdateAssignmentStatus = async (assignmentId, newStatus) => {
     try {
       const updateData = { status: newStatus };
-      
+
       if (newStatus === 'in_progress') {
         updateData.start_time = new Date().toISOString();
       } else if (newStatus === 'completed') {
         updateData.end_time = new Date().toISOString();
       }
-      
+
       await TourAssignment.update(assignmentId, updateData);
       loadDashboardData();
     } catch (error) {
@@ -441,37 +431,37 @@ export default function AdminDashboard() {
 
   const filteredUsers = useMemo(() => {
     if (!users || !Array.isArray(users)) return [];
-    
+
     return users.filter(user => {
       const matchesSearch = user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesGroup = userGroupFilter === "All" || (user.user_group || []).includes(userGroupFilter);
-      
+
       // If showInactiveUsers is true, show all users. If false, only show active users
       const matchesActivity = showInactiveUsers ? true : (
-        user.last_active_date && 
+        user.last_active_date &&
         new Date(user.last_active_date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       );
-      
+
       return matchesSearch && matchesGroup && matchesActivity;
     });
   }, [users, searchQuery, userGroupFilter, showInactiveUsers]);
 
   const augmentedTours = useMemo(() => {
     if (!tours || !Array.isArray(tours) || !assignments || !Array.isArray(assignments)) return [];
-    
+
     return tours.map(tour => {
-        const assignment = assignments.find(a => a.tour_id === tour.id);
-        return { ...tour, assignment };
-      });
+      const assignment = assignments.find(a => a.tour_id === tour.id);
+      return { ...tour, assignment };
+    });
   }, [tours, assignments]);
-  
+
   const filteredTours = useMemo(() => {
     if (!augmentedTours || !Array.isArray(augmentedTours)) return [];
-    
+
     return augmentedTours.filter(tour => {
       return tour.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             tour.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        tour.description?.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [augmentedTours, searchQuery]);
 
@@ -489,14 +479,14 @@ export default function AdminDashboard() {
     if (!tourists || !Array.isArray(tourists)) return [];
     return tourists.filter(user => {
       return user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        user.email?.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [tourists, searchQuery]);
-  
+
   const filteredBookings = useMemo(() => {
     if (!bookings || !Array.isArray(bookings)) return [];
     return bookings.filter(booking => {
-       return true;
+      return true;
     });
   }, [bookings]);
 
@@ -516,7 +506,7 @@ export default function AdminDashboard() {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-6 text-center">
@@ -524,15 +514,15 @@ export default function AdminDashboard() {
         <h2 className="mt-4 text-xl font-semibold text-red-600">{t('common.loadingError')}</h2>
         <p className="mt-2 text-gray-600">{error}</p>
         <Button onClick={loadDashboardData} className="mt-4">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            {t('common.tryAgain')}
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {t('common.tryAgain')}
         </Button>
       </div>
     );
   }
 
-  console.log("Rendering dashboard with:", { 
-    usersCount: Array.isArray(users) ? users.length : 0, 
+  console.log("Rendering dashboard with:", {
+    usersCount: Array.isArray(users) ? users.length : 0,
     toursCount: Array.isArray(tours) ? tours.length : 0,
     filteredUsersCount: Array.isArray(filteredUsers) ? filteredUsers.length : 0,
     filteredToursCount: Array.isArray(filteredTours) ? filteredTours.length : 0,
@@ -593,16 +583,16 @@ export default function AdminDashboard() {
     try {
       setInviteStatus("sending");
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000)); 
+      await new Promise(resolve => setTimeout(resolve, 1000));
       // In a real application, you would make an API call here:
       // await User.create(newUser); 
-      
+
       alert(t("admin.inviteUser.mockInvitationSent", { email: newUser.email, groups: newUser.user_group.join(", ") }));
-      
+
       setNewUser({ full_name: "", email: "", role: "user", user_group: ["Tourist"] });
       setInviteStatus("success");
       loadDashboardData();
-      
+
       setTimeout(() => {
         setIsCreateUserOpen(false);
         setInviteStatus(null);
@@ -624,12 +614,12 @@ export default function AdminDashboard() {
       }
     });
   };
-  
+
   const handleUpdateUserGroups = async (userId, groups) => {
     try {
       const userData = users.find(u => u.id === userId);
       if (!userData) return;
-      
+
       await User.update(userId, { ...userData, user_group: groups });
       loadDashboardData();
     } catch (error) {
@@ -641,7 +631,7 @@ export default function AdminDashboard() {
   const handleExportTourStops = async (tourId, tourTitle) => {
     try {
       const response = await exportTourStopsCSV({ tourId });
-      
+
       if (response.status === 200) {
         // Create blob and download
         const blob = new Blob([response.data], { type: 'text/csv' });
@@ -670,8 +660,8 @@ export default function AdminDashboard() {
           <p className="text-gray-500">{t('admin.dashboardSubtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={loadDashboardData}
             className="gap-2"
@@ -695,8 +685,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="tourists">{t('admin.tabs.tourists')}</TabsTrigger>
           <TabsTrigger value="activity_log">{t('admin.tabs.activityLog')}</TabsTrigger>
           <TabsTrigger value="system_errors">{t('admin.tabs.systemErrors')}</TabsTrigger>
+          <TabsTrigger value="app_settings">{t('admin.tabs.appSettings')}</TabsTrigger>
+          <TabsTrigger value="broadcast_debug">🔧 Broadcast Debug</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -757,7 +749,7 @@ export default function AdminDashboard() {
         <TabsContent value="active_tours">
           <div className="space-y-6">
             <ActiveToursMonitor />
-            
+
             {/* Live Audio Broadcast Section */}
             <Card>
               <CardHeader>
@@ -799,7 +791,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AdminAnalytics 
+          <AdminAnalytics
             tours={tours}
             users={users}
             assignments={assignments}
@@ -832,7 +824,7 @@ export default function AdminDashboard() {
               <div className="mb-4 text-sm text-gray-600">
                 Total Users: {users.length} | Filtered: {filteredUsers.length} | Showing: {paginatedUsers.length}
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -856,11 +848,11 @@ export default function AdminDashboard() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
                 Debug: Total users loaded: {users.length}, After search filter: {filteredUsers.length}, Show inactive: {showInactiveUsers.toString()}
               </div>
-              
+
               {paginatedUsers.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="mx-auto h-12 w-12 text-gray-400" />
@@ -869,7 +861,7 @@ export default function AdminDashboard() {
                     {users.length === 0 ? "No users in the system." : "No users match your current filters."}
                   </p>
                   {users.length > 0 && filteredUsers.length === 0 && (
-                    <Button 
+                    <Button
                       onClick={() => {
                         setSearchQuery("");
                         setUserGroupFilter("All");
@@ -901,8 +893,8 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
                               {userItem.profile_image ? (
-                                <img 
-                                  src={userItem.profile_image} 
+                                <img
+                                  src={userItem.profile_image}
                                   alt={userItem.full_name}
                                   className="h-8 w-8 rounded-full object-cover"
                                   loading="lazy"
@@ -937,22 +929,22 @@ export default function AdminDashboard() {
                                   <DialogDescription>
                                     Assign groups to {userItem.full_name}
                                   </DialogDescription>
-                                
+
                                 </DialogHeader>
                                 <div className="py-4 space-y-4">
                                   {["Admin", "Tour Guide", "Driver", "Tourist"].map((group) => (
                                     <div key={group} className="flex items-center space-x-2">
-                                      <Checkbox 
+                                      <Checkbox
                                         id={`${userItem.id}-${group}`}
                                         checked={(userItem.user_group || []).includes(group)}
                                         onCheckedChange={(checked) => {
-                                          const updatedGroups = checked 
+                                          const updatedGroups = checked
                                             ? [...(userItem.user_group || []), group]
                                             : (userItem.user_group || []).filter(g => g !== group);
                                           handleUpdateUserGroups(userItem.id, updatedGroups);
                                         }}
                                       />
-                                      <Label 
+                                      <Label
                                         htmlFor={`${userItem.id}-${group}`}
                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                       >
@@ -962,7 +954,7 @@ export default function AdminDashboard() {
                                   ))}
                                 </div>
                                 <DialogFooter>
-                                   <Button variant="outline" onClick={(e) => e.currentTarget.closest('[role="dialog"]')?.querySelector('[aria-label="Close"]')?.click()}>Done</Button>
+                                  <Button variant="outline" onClick={(e) => e.currentTarget.closest('[role="dialog"]')?.querySelector('[aria-label="Close"]')?.click()}>Done</Button>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
@@ -1015,67 +1007,67 @@ export default function AdminDashboard() {
                   </TableBody>
                 </Table>
               )}
-              
+
               <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                   {t('admin.pagination.showingUsers', {
-                      start: Math.min((usersPage - 1) * usersPerPage + 1, filteredUsers.length),
-                      end: Math.min(usersPage * usersPerPage, filteredUsers.length),
-                      total: filteredUsers.length
-                   })}
+                  {t('admin.pagination.showingUsers', {
+                    start: Math.min((usersPage - 1) * usersPerPage + 1, filteredUsers.length),
+                    end: Math.min(usersPage * usersPerPage, filteredUsers.length),
+                    total: filteredUsers.length
+                  })}
                 </div>
                 <div className="flex items-center space-x-1">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setUsersPage(1)}
-                        disabled={usersPage === 1}
-                    >
-                        <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setUsersPage(prev => Math.max(1, prev - 1))}
-                        disabled={usersPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="p-2 text-sm">
-                        {t('admin.pagination.page', { current: usersPage, total: Math.ceil(filteredUsers.length / usersPerPage) })}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setUsersPage(prev => prev + 1)}
-                        disabled={usersPage * usersPerPage >= filteredUsers.length}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setUsersPage(Math.ceil(filteredUsers.length / usersPerPage))}
-                        disabled={usersPage * usersPerPage >= filteredUsers.length}
-                    >
-                        <ChevronsRight className="h-4 w-4" />
-                    </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUsersPage(1)}
+                    disabled={usersPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUsersPage(prev => Math.max(1, prev - 1))}
+                    disabled={usersPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="p-2 text-sm">
+                    {t('admin.pagination.page', { current: usersPage, total: Math.ceil(filteredUsers.length / usersPerPage) })}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUsersPage(prev => prev + 1)}
+                    disabled={usersPage * usersPerPage >= filteredUsers.length}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUsersPage(Math.ceil(filteredUsers.length / usersPerPage))}
+                    disabled={usersPage * usersPerPage >= filteredUsers.length}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Select
-                    value={usersPerPage.toString()}
-                    onValueChange={(value) => {
-                        setUsersPerPage(Number(value));
-                        setUsersPage(1); // Reset to first page on perPage change
-                    }}
+                  value={usersPerPage.toString()}
+                  onValueChange={(value) => {
+                    setUsersPerPage(Number(value));
+                    setUsersPage(1); // Reset to first page on perPage change
+                  }}
                 >
-                    <SelectTrigger className="w-[70px] h-9">
-                        <SelectValue placeholder={usersPerPage} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {[10, 20, 50, 100].map(size => (
-                            <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
-                        ))}
-                    </SelectContent>
+                  <SelectTrigger className="w-[70px] h-9">
+                    <SelectValue placeholder={usersPerPage} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50, 100].map(size => (
+                      <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </CardContent>
@@ -1083,7 +1075,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="tours">
-           <Card>
+          <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>{t('admin.tours.title')}</CardTitle>
@@ -1108,7 +1100,7 @@ export default function AdminDashboard() {
               <div className="mb-4 text-sm text-gray-600">
                 {t('admin.tours.totalTours')}: {tours.length} | {t('admin.tours.filtered')}: {filteredTours.length} | {t('admin.tours.showing')}: {paginatedTours.length}
               </div>
-              
+
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -1120,7 +1112,7 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
-              
+
               {paginatedTours.length === 0 ? (
                 <div className="text-center py-8">
                   <MapIcon className="mx-auto h-12 w-12 text-gray-400" />
@@ -1141,7 +1133,7 @@ export default function AdminDashboard() {
                   </TableHeader>
                   <TableBody>
                     {paginatedTours.map((tour) => (
-                       <TableRow key={tour.id}>
+                      <TableRow key={tour.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {tour.preview_image ? (
@@ -1183,8 +1175,8 @@ export default function AdminDashboard() {
                                 <span>{drivers.find(d => d.id === tour.assignment.driver_id)?.full_name || tour.assignment.driver_id}</span>
                               </div>
                               <div className="flex gap-1">
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => handleUnassignTour(tour.assignment)}
                                   disabled={tour.assignment.status === 'in_progress'}
@@ -1192,8 +1184,8 @@ export default function AdminDashboard() {
                                   {t('admin.assignment.unassign')}
                                 </Button>
                                 {tour.assignment.status === 'assigned' && (
-                                  <Button 
-                                    variant="outline" 
+                                  <Button
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => handleUpdateAssignmentStatus(tour.assignment.id, 'in_progress')}
                                   >
@@ -1203,8 +1195,8 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           ) : (
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => {
                                 setSelectedTourForAssignment(tour);
@@ -1246,13 +1238,13 @@ export default function AdminDashboard() {
                             >
                               <Download className="h-4 w-4 text-green-600" />
                             </Button>
-                             {tour.assignment && (
+                            {tour.assignment && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleShowTracking(tour)}
                               >
-                                <MapIcon size={14} className="text-blue-500"/>
+                                <MapIcon size={14} className="text-blue-500" />
                               </Button>
                             )}
                           </div>
@@ -1265,109 +1257,109 @@ export default function AdminDashboard() {
 
               <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                    {t('admin.pagination.showingTours', {
-                        start: Math.min((toursPage - 1) * toursPerPage + 1, filteredTours.length),
-                        end: Math.min(toursPage * toursPerPage, filteredTours.length),
-                        total: filteredTours.length
-                    })}
+                  {t('admin.pagination.showingTours', {
+                    start: Math.min((toursPage - 1) * toursPerPage + 1, filteredTours.length),
+                    end: Math.min(toursPage * toursPerPage, filteredTours.length),
+                    total: filteredTours.length
+                  })}
                 </div>
-                 <div className="flex items-center space-x-1">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setToursPage(1)}
-                        disabled={toursPage === 1}
-                    >
-                        <ChevronsLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setToursPage(prev => Math.max(1, prev - 1))}
-                        disabled={toursPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                     <span className="p-2 text-sm">
-                        {t('admin.pagination.page', { current: toursPage, total: Math.ceil(filteredTours.length / toursPerPage) })}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setToursPage(prev => prev + 1)}
-                        disabled={toursPage * toursPerPage >= filteredTours.length}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setToursPage(Math.ceil(filteredTours.length / toursPerPage))}
-                        disabled={toursPage * toursPerPage >= filteredTours.length}
-                    >
-                        <ChevronsRight className="h-4 w-4" />
-                    </Button>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setToursPage(1)}
+                    disabled={toursPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setToursPage(prev => Math.max(1, prev - 1))}
+                    disabled={toursPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="p-2 text-sm">
+                    {t('admin.pagination.page', { current: toursPage, total: Math.ceil(filteredTours.length / toursPerPage) })}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setToursPage(prev => prev + 1)}
+                    disabled={toursPage * toursPerPage >= filteredTours.length}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setToursPage(Math.ceil(filteredTours.length / toursPerPage))}
+                    disabled={toursPage * toursPerPage >= filteredTours.length}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Select
-                    value={toursPerPage.toString()}
-                    onValueChange={(value) => {
-                        setToursPerPage(Number(value));
-                        setToursPage(1); // Reset to first page
-                    }}
+                  value={toursPerPage.toString()}
+                  onValueChange={(value) => {
+                    setToursPerPage(Number(value));
+                    setToursPage(1); // Reset to first page
+                  }}
                 >
-                    <SelectTrigger className="w-[70px] h-9">
-                        <SelectValue placeholder={toursPerPage} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {[10, 20, 50, 100].map(size => (
-                            <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
-                        ))}
-                    </SelectContent>
+                  <SelectTrigger className="w-[70px] h-9">
+                    <SelectValue placeholder={toursPerPage} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50, 100].map(size => (
+                      <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="tourists">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('admin.tourists.title')}</CardTitle>
-                <CardDescription>{t('admin.tourists.description')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                    <Input
-                        placeholder={t('admin.tourists.searchPlaceholder')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="max-w-sm"
-                    />
-                </div>
-                <ScrollArea className="h-[calc(100vh-250px)]">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t('admin.tourists.table.name')}</TableHead>
-                                <TableHead>{t('admin.tourists.table.email')}</TableHead>
-                                <TableHead>{t('admin.tourists.table.totalTours')}</TableHead>
-                                <TableHead>{t('admin.tourists.table.completedTours')}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredTourists.map((tourist) => (
-                                <TableRow key={tourist.id}>
-                                    <TableCell>{tourist.full_name || t('common.notAvailable')}</TableCell>
-                                    <TableCell>{tourist.email || t('common.notAvailable')}</TableCell>
-                                    <TableCell>{(userActivity.filter(act => act.user_id === tourist.id) || []).length}</TableCell>
-                                    <TableCell>{(userActivity.filter(act => act.user_id === tourist.id && act.status === 'completed') || []).length}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('admin.tourists.title')}</CardTitle>
+              <CardDescription>{t('admin.tourists.description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center mb-4">
+                <Input
+                  placeholder={t('admin.tourists.searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-sm"
+                />
+              </div>
+              <ScrollArea className="h-[calc(100vh-250px)]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('admin.tourists.table.name')}</TableHead>
+                      <TableHead>{t('admin.tourists.table.email')}</TableHead>
+                      <TableHead>{t('admin.tourists.table.totalTours')}</TableHead>
+                      <TableHead>{t('admin.tourists.table.completedTours')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTourists.map((tourist) => (
+                      <TableRow key={tourist.id}>
+                        <TableCell>{tourist.full_name || t('common.notAvailable')}</TableCell>
+                        <TableCell>{tourist.email || t('common.notAvailable')}</TableCell>
+                        <TableCell>{(userActivity.filter(act => act.user_id === tourist.id) || []).length}</TableCell>
+                        <TableCell>{(userActivity.filter(act => act.user_id === tourist.id && act.status === 'completed') || []).length}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="activity_log">
@@ -1402,7 +1394,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{tours.find(t => t.id === activity.tour_id)?.title || activity.tour_id}</TableCell>
                         <TableCell>
-                          {format(new Date(activity.updated_date || activity.created_date), 'MMM d, yyyy HH:mm')}
+                          {format(new Date(activity.updated_at || activity.created_at), 'MMM d, yyyy HH:mm')}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1414,69 +1406,15 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="system_errors">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>{t('admin.systemErrors.title')}</CardTitle>
-                  <CardDescription>{t('admin.systemErrors.description')}</CardDescription>
-                </div>
-                <Button variant="outline" onClick={loadDashboardData} size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t('admin.systemErrors.refreshLogs')}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {errors.length === 0 ? (
-                <div className="text-center py-12">
-                  <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
-                  <h3 className="mt-2 text-sm font-medium text-green-600">{t('admin.systemErrors.noErrorsTitle')}</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {t('admin.systemErrors.noErrorsMessage')}
-                  </p>
-                  <div className="mt-4 text-xs text-gray-400">
-                    <p>{t('admin.systemErrors.lastChecked')}: {new Date().toLocaleString()}</p>
-                    <p>{t('admin.systemErrors.monitoringDetails')}</p>
-                  </div>
-                </div>
-              ) : (
-                <ScrollArea className="h-[500px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t('admin.systemErrors.table.time')}</TableHead>
-                        <TableHead>{t('admin.systemErrors.table.type')}</TableHead>
-                        <TableHead>{t('admin.systemErrors.table.message')}</TableHead>
-                        <TableHead>{t('admin.systemErrors.table.details')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {errors.map((errorItem, index) => (
-                        <TableRow key={errorItem.id || index}>
-                          <TableCell>
-                            {format(new Date(errorItem.timestamp), 'MMM d, yyyy HH:mm:ss')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="destructive" className="gap-1">
-                              <AlertTriangle size={12} />
-                              {errorItem.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {errorItem.message}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {errorItem.details}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+          <SystemLogs />
+        </TabsContent>
+
+        <TabsContent value="app_settings">
+          <AppSettings />
+        </TabsContent>
+
+        <TabsContent value="broadcast_debug">
+          <BroadcastDebugPanel />
         </TabsContent>
       </Tabs>
 
@@ -1546,7 +1484,7 @@ export default function AdminDashboard() {
               <Input
                 id="new-user-name"
                 value={newUser.full_name}
-                onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
                 placeholder={t('admin.inviteUser.fullNamePlaceholder')}
               />
             </div>
@@ -1556,7 +1494,7 @@ export default function AdminDashboard() {
                 id="new-user-email"
                 type="email"
                 value={newUser.email}
-                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                 placeholder={t('admin.inviteUser.emailPlaceholder')}
               />
             </div>
@@ -1564,7 +1502,7 @@ export default function AdminDashboard() {
               <Label htmlFor="new-user-role">{t('admin.inviteUser.role')}</Label>
               <Select
                 value={newUser.role}
-                onValueChange={(value) => setNewUser({...newUser, role: value})}
+                onValueChange={(value) => setNewUser({ ...newUser, role: value })}
               >
                 <SelectTrigger id="new-user-role">
                   <SelectValue placeholder={t('admin.inviteUser.selectRole')} />
@@ -1579,12 +1517,12 @@ export default function AdminDashboard() {
               <Label>{t('admin.inviteUser.userGroups')}</Label>
               {["Admin", "Tour Guide", "Driver", "Tourist"].map((group) => (
                 <div key={group} className="flex items-center space-x-2">
-                  <Checkbox 
+                  <Checkbox
                     id={`new-user-${group}`}
                     checked={(newUser.user_group || []).includes(group)}
                     onCheckedChange={() => handleUserGroupChange(group)}
                   />
-                  <Label 
+                  <Label
                     htmlFor={`new-user-${group}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
@@ -1598,7 +1536,7 @@ export default function AdminDashboard() {
             <Button variant="outline" onClick={() => setIsCreateUserOpen(false)}>
               {t('common.cancel')}
             </Button>
-            <Button 
+            <Button
               onClick={handleCreateUser}
               disabled={!newUser.email || !newUser.full_name || inviteStatus === "sending"}
             >
@@ -1642,8 +1580,8 @@ export default function AdminDashboard() {
             <div className="space-y-2">
               <Label htmlFor="assign-driver-select">{t('admin.assignTour.selectDriver')}</Label>
               {drivers.length > 0 ? (
-                <Select 
-                  value={selectedDriver || ""} 
+                <Select
+                  value={selectedDriver || ""}
                   onValueChange={setSelectedDriver}
                 >
                   <SelectTrigger id="assign-driver-select">
@@ -1665,9 +1603,9 @@ export default function AdminDashboard() {
                   <div className="text-sm text-yellow-800">
                     ⚠️ {t('admin.assignTour.noDriversFound')}
                   </div>
-                  <Button 
-                    variant="link" 
-                    size="sm" 
+                  <Button
+                    variant="link"
+                    size="sm"
                     className="p-0 h-auto text-yellow-700"
                     onClick={() => {
                       setShowAssignDialog(false);
@@ -1681,7 +1619,7 @@ export default function AdminDashboard() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="assign-start-time">{t('admin.assignTour.startTime')}</Label>
-              <Input 
+              <Input
                 id="assign-start-time"
                 type="datetime-local"
                 value={startTime}
@@ -1693,7 +1631,7 @@ export default function AdminDashboard() {
             <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
               {t('common.cancel')}
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (selectedDriver && selectedTourForAssignment && startTime) {
                   handleAssignTour(
@@ -1725,24 +1663,24 @@ export default function AdminDashboard() {
           <div className="space-y-4 mt-4">
             <div className="flex justify-between text-sm">
               <div>
-                <span className="font-medium">{t('admin.trackTour.driver')}: </span> 
+                <span className="font-medium">{t('admin.trackTour.driver')}: </span>
                 {drivers.find(d => d.id === trackingData?.assignment?.driver_id)?.full_name || trackingData?.assignment?.driver_id || t('common.notAvailable')}
               </div>
               <div>
                 <span className="font-medium">{t('admin.trackTour.started')}: </span>
-                {trackingData?.assignment?.start_time && 
+                {trackingData?.assignment?.start_time &&
                   format(new Date(trackingData.assignment.start_time), 'PPp')}
               </div>
             </div>
-            <Progress 
+            <Progress
               value={
                 ((trackingData?.assignment?.completed_stops?.length || 0) / (trackingData?.stops?.length || 1)) * 100
-              } 
+              }
             />
             <div className="text-sm text-center text-gray-500">
-              {t('admin.trackTour.stopsProgress', { 
-                completed: trackingData?.assignment?.completed_stops?.length || 0, 
-                total: trackingData?.stops?.length || 0 
+              {t('admin.trackTour.stopsProgress', {
+                completed: trackingData?.assignment?.completed_stops?.length || 0,
+                total: trackingData?.stops?.length || 0
               })}
             </div>
           </div>
@@ -1758,7 +1696,7 @@ export default function AdminDashboard() {
               Select an active tour and broadcast live audio to the driver
             </DialogDescription>
           </DialogHeader>
-          <LiveAudioBroadcast 
+          <LiveAudioBroadcast
             activeTours={activeToursForBroadcast}
             onClose={() => setShowLiveAudioDialog(false)}
           />

@@ -41,7 +41,7 @@ export default function DriverHistory() {
       // Get all assignments for this driver (including completed and cancelled)
       const driverAssignments = await TourAssignment.filter({
         driver_id: currentUser.id
-      }, '-created_date');
+      }, '-created_at');
 
       setAssignments(driverAssignments || []);
 
@@ -90,7 +90,7 @@ export default function DriverHistory() {
       });
 
       // Navigate to the driver navigation page with the new tour
-      navigate(createPageUrl(`DriverNavigation?tourId=${assignment.tour_id}`));
+      navigate(`${createPageUrl('DriverNavigation')}?tourId=${assignment.tour_id}`);
     } catch (error) {
       console.error('Error restarting tour:', error);
       alert(t('driver.errorStartingTour'));
@@ -222,7 +222,7 @@ export default function DriverHistory() {
 
                       <div className="flex gap-2">
                         <Button 
-                          onClick={() => navigate(createPageUrl(`DriverNavigation?tourId=${tour.id}`))}
+                          onClick={() => navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`)}
                           className="gap-2"
                         >
                           <Play className="h-4 w-4" />
