@@ -1,9 +1,9 @@
+/* Import theme styles */
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import theme styles */
-@import './styles/theme.css';
 
 /* Ensure theme classes work on body */
 body {
