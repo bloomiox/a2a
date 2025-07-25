@@ -1694,6 +1694,7 @@ export const AppSettings = {
         logoUrl: '',
         primaryColor: '#f97316',
         secondaryColor: '#64748b',
+        themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
         contactEmail: 'info@turbatours.com',
@@ -1757,20 +1758,136 @@ export const AppSettings = {
           '249 115 22'; // fallback to orange
       };
       
-      // Update CSS custom properties for colors (in RGB format for Tailwind)
+      // Helper function to calculate luminance and determine appropriate foreground color
+      const getContrastColor = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return '255 255 255'; // fallback to white
+        
+        const r = parseInt(result[1], 16);
+        const g = parseInt(result[2], 16);
+        const b = parseInt(result[3], 16);
+        
+        // Calculate relative luminance using WCAG formula
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        // Return white for dark colors, black for light colors
+        return luminance > 0.5 ? '0 0 0' : '255 255 255';
+      };
+      
+      // Apply theme mode
       const root = document.documentElement;
+      const applyThemeMode = (mode) => {
+        console.log('Applying theme mode:', mode);
+        root.classList.remove('light', 'dark');
+        if (mode === 'auto') {
+          // Use system preference
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const themeToApply = prefersDark ? 'dark' : 'light';
+          console.log('Auto mode detected system preference:', themeToApply);
+          root.classList.add(themeToApply);
+        } else {
+          root.classList.add(mode);
+        }
+        console.log('HTML classes after theme application:', root.className);
+      };
+      
+      if (settings.themeMode) {
+        applyThemeMode(settings.themeMode);
+        
+        // Listen for system theme changes if auto mode
+        if (settings.themeMode === 'auto') {
+          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          const handleChange = () => applyThemeMode('auto');
+          mediaQuery.addEventListener('change', handleChange);
+          
+          // Store cleanup function
+          window.themeCleanup = () => mediaQuery.removeEventListener('change', handleChange);
+        } else if (window.themeCleanup) {
+          window.themeCleanup();
+          delete window.themeCleanup;
+        }
+      } else {
+        // Default to light theme if no theme mode is set
+        console.log('No theme mode set, defaulting to light');
+        applyThemeMode('light');
+      }
+      
+      // Update CSS custom properties for colors (in RGB format for Tailwind)
       if (settings.primaryColor) {
         const primaryRgb = hexToRgb(settings.primaryColor);
+        const primaryForeground = getContrastColor(settings.primaryColor);
+        
         root.style.setProperty('--primary', primaryRgb);
-        root.style.setProperty('--primary-foreground', '255 255 255');
-        root.style.setProperty('--accent', primaryRgb); // Use primary color for accent (buttons)
-        root.style.setProperty('--accent-foreground', '255 255 255');
+        root.style.setProperty('--primary-foreground', primaryForeground);
+        root.style.setProperty('--accent', primaryRgb);
+        root.style.setProperty('--accent-foreground', primaryForeground);
+        
+        // Additional theme colors
+        root.style.setProperty('--ring', primaryRgb);
+        root.style.setProperty('--chart-1', primaryRgb);
       }
+      
       if (settings.secondaryColor) {
         const secondaryRgb = hexToRgb(settings.secondaryColor);
+        const secondaryForeground = getContrastColor(settings.secondaryColor);
+        
         root.style.setProperty('--secondary', secondaryRgb);
-        root.style.setProperty('--secondary-foreground', '255 255 255');
+        root.style.setProperty('--secondary-foreground', secondaryForeground);
+        
+        // Create a lighter version for muted backgrounds
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(settings.secondaryColor);
+        if (result) {
+          const r = Math.min(255, parseInt(result[1], 16) + 40);
+          const g = Math.min(255, parseInt(result[2], 16) + 40);
+          const b = Math.min(255, parseInt(result[3], 16) + 40);
+          const mutedRgb = `${r} ${g} ${b}`;
+          const mutedForeground = getContrastColor(`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
+          
+          root.style.setProperty('--muted', mutedRgb);
+          root.style.setProperty('--muted-foreground', mutedForeground);
+        }
+        
+        root.style.setProperty('--chart-2', secondaryRgb);
       }
+      
+      // Update favicon if logo is available
+      if (settings.logoUrl) {
+        const favicon = document.querySelector('link[rel="icon"]') || document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = settings.logoUrl;
+        if (!document.querySelector('link[rel="icon"]')) {
+          document.head.appendChild(favicon);
+        }
+      }
+      
+      // Add meta tags for branding
+      const updateMetaTag = (name, content) => {
+        let meta = document.querySelector(`meta[name="${name}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.name = name;
+          document.head.appendChild(meta);
+        }
+        meta.content = content;
+      };
+      
+      if (settings.companyDescription) {
+        updateMetaTag('description', settings.companyDescription);
+      }
+      
+      if (settings.companyName) {
+        updateMetaTag('author', settings.companyName);
+      }
+      
+      // Apply maintenance mode styling if enabled
+      if (settings.enableMaintenance) {
+        root.classList.add('maintenance-mode');
+      } else {
+        root.classList.remove('maintenance-mode');
+      }
+      
+      // Store settings globally for easy access
+      window.appSettings = settings;
       
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('appSettingsChanged', { detail: settings }));

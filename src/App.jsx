@@ -6,6 +6,7 @@ import { ensureSchemaUpToDate } from '@/utils/schemaManager'
 import { toast } from "@/components/ui/use-toast"
 import initializeLogging from '@/services/LoggingInitializer'
 import { AppSettings } from '@/api/entities'
+import AppSettingsProvider from '@/contexts/AppSettingsContext'
 
 function App() {
   const [schemaChecked, setSchemaChecked] = useState(false);
@@ -53,10 +54,10 @@ function App() {
   }, []);
   
   return (
-    <>
+    <AppSettingsProvider>
       <Pages />
       <Toaster />
-    </>
+    </AppSettingsProvider>
   )
 }
 

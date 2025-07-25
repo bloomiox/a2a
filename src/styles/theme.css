@@ -1,0 +1,204 @@
+/* Theme-aware styles */
+
+/* Base theme variables */
+:root {
+  --background: 255 255 255;
+  --foreground: 9 9 11;
+  --card: 255 255 255;
+  --card-foreground: 9 9 11;
+  --popover: 255 255 255;
+  --popover-foreground: 9 9 11;
+  --border: 229 229 232;
+  --input: 229 229 232;
+  --muted: 245 245 245;
+  --muted-foreground: 113 113 122;
+  --destructive: 239 68 68;
+  --destructive-foreground: 250 250 250;
+}
+
+/* Maintenance mode styles */
+.maintenance-mode {
+  filter: grayscale(0.3);
+}
+
+.maintenance-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Theme wrapper styles */
+.theme-wrapper {
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* Custom scrollbar with theme colors */
+.theme-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-wrapper::-webkit-scrollbar-track {
+  background: rgb(var(--muted));
+}
+
+.theme-wrapper::-webkit-scrollbar-thumb {
+  background: rgb(var(--primary));
+  border-radius: 4px;
+}
+
+.theme-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--primary) / 0.8);
+}
+
+/* Theme-aware focus styles */
+.theme-wrapper *:focus-visible {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Custom button animations */
+.theme-wrapper button {
+  transition: all 0.2s ease;
+}
+
+.theme-wrapper button:hover {
+  transform: translateY(-1px);
+}
+
+.theme-wrapper button:active {
+  transform: translateY(0);
+}
+
+/* Theme-aware card hover effects */
+.theme-wrapper .card:hover {
+  box-shadow: 0 10px 25px -5px rgba(var(--primary) / 0.1), 0 4px 6px -2px rgba(var(--primary) / 0.05);
+}
+
+/* Loading spinner with theme colors */
+.theme-spinner {
+  border-color: rgb(var(--muted));
+  border-top-color: rgb(var(--primary));
+}
+
+/* Theme-aware selection */
+.theme-wrapper ::selection {
+  background: rgb(var(--primary) / 0.2);
+  color: rgb(var(--primary-foreground));
+}
+
+/* Responsive theme adjustments */
+@media (max-width: 768px) {
+  .theme-wrapper {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-wrapper {
+    font-size: 13px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .theme-wrapper {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .theme-wrapper * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .theme-wrapper {
+    --primary: 0 0 0;
+    --primary-foreground: 255 255 255;
+    --secondary: 128 128 128;
+    --secondary-foreground: 255 255 255;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .theme-wrapper * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode styles */
+html.dark,
+.dark {
+  --background: 0 0 0;
+  --foreground: 255 255 255;
+  --card: 9 9 11;
+  --card-foreground: 250 250 250;
+  --popover: 9 9 11;
+  --popover-foreground: 250 250 250;
+  --border: 39 39 42;
+  --input: 39 39 42;
+  --muted: 39 39 42;
+  --muted-foreground: 161 161 170;
+  --destructive: 239 68 68;
+  --destructive-foreground: 250 250 250;
+}
+
+html.light,
+.light {
+  --background: 255 255 255;
+  --foreground: 9 9 11;
+  --card: 255 255 255;
+  --card-foreground: 9 9 11;
+  --popover: 255 255 255;
+  --popover-foreground: 9 9 11;
+  --border: 229 229 232;
+  --input: 229 229 232;
+  --muted: 245 245 245;
+  --muted-foreground: 113 113 122;
+  --destructive: 239 68 68;
+  --destructive-foreground: 250 250 250;
+}
+
+/* Auto mode support */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    --background: 0 0 0;
+    --foreground: 255 255 255;
+    --card: 9 9 11;
+    --card-foreground: 250 250 250;
+    --popover: 9 9 11;
+    --popover-foreground: 250 250 250;
+    --border: 39 39 42;
+    --input: 39 39 42;
+    --muted: 39 39 42;
+    --muted-foreground: 161 161 170;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not(.light):not(.dark) {
+    --background: 255 255 255;
+    --foreground: 9 9 11;
+    --card: 255 255 255;
+    --card-foreground: 9 9 11;
+    --popover: 255 255 255;
+    --popover-foreground: 9 9 11;
+    --border: 229 229 232;
+    --input: 229 229 232;
+    --muted: 245 245 245;
+    --muted-foreground: 113 113 122;
+  }
+}

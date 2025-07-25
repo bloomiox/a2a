@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ThemeWrapper from '@/components/common/ThemeWrapper';
+import FeatureGate, { useFeature } from '@/components/common/FeatureGate';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { User } from '@/api/entities';
 import { TourAssignment } from '@/api/entities';
 import { Tour } from '@/api/entities';
@@ -162,7 +165,8 @@ export default function DriverDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+    <ThemeWrapper>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm border p-6">
@@ -205,16 +209,32 @@ export default function DriverDashboard() {
               {activeAssignments.map(assignment => {
                 const tour = tours[assignment.tour_id];
                 return (
-                  <div key={assignment.id} className="p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
-                       onClick={() => navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`)}>
-                    <h3 className="text-lg font-semibold">{tour?.title || 'Loading...'}</h3>
-                    <p className="text-muted-foreground text-sm mt-1">{tour?.description}</p>
-                    <div className="flex justify-end mt-4">
-                      <Button>
-                        Continue Navigation <ChevronsRight className="h-4 w-4 ml-2" />
-                      </Button>
+                  <FeatureGate 
+                    key={assignment.id}
+                    feature="enableLiveTracking"
+                    fallback={
+                      <div className="p-4 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300">
+                        <h3 className="text-lg font-semibold text-gray-600">{tour?.title || 'Loading...'}</h3>
+                        <p className="text-gray-500 text-sm mt-1">{tour?.description}</p>
+                        <div className="flex justify-end mt-4">
+                          <Button disabled variant="outline">
+                            Navigation Disabled
+                          </Button>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div className="p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
+                         onClick={() => navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`)}>
+                      <h3 className="text-lg font-semibold">{tour?.title || 'Loading...'}</h3>
+                      <p className="text-muted-foreground text-sm mt-1">{tour?.description}</p>
+                      <div className="flex justify-end mt-4">
+                        <Button>
+                          Continue Navigation <ChevronsRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  </FeatureGate>
                 );
               })}
             </CardContent>
@@ -306,6 +326,7 @@ export default function DriverDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </ThemeWrapper>
   );
 }

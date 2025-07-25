@@ -389,8 +389,18 @@ export default function Profile() {
         
         <div className="flex-1 flex justify-end items-start gap-2">
           <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
-            <Settings className="w-4 h-4 mr-2" />
+            <Edit className="w-4 h-4 mr-2" />
             {t('profile.editProfile')}
+          </Button>
+          <Button variant="outline" onClick={() => navigate(createPageUrl('Settings'))}>
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
+          <Button variant="destructive" onClick={async () => {
+            await User.logout();
+            navigate(createPageUrl('Landing'));
+          }}>
+            Logout
           </Button>
         </div>
       </div>

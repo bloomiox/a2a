@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Test</title>
+    <style>
+        :root {
+            --primary: 249 115 22; /* Orange */
+            --secondary: 100 116 139; /* Slate */
+        }
+        
+        .test-primary {
+            background-color: rgb(var(--primary));
+            color: white;
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .test-secondary {
+            background-color: rgb(var(--secondary));
+            color: white;
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .test-hex-primary {
+            background-color: #f97316;
+            color: white;
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .test-hex-secondary {
+            background-color: #64748b;
+            color: white;
+            padding: 20px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Color Test</h1>
+    <div class="test-primary">Primary Color (CSS Variable)</div>
+    <div class="test-secondary">Secondary Color (CSS Variable)</div>
+    <div class="test-hex-primary">Primary Color (Hex #f97316)</div>
+    <div class="test-hex-secondary">Secondary Color (Hex #64748b)</div>
+    
+    <script>
+        // Test the hex to RGB conversion
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? 
+                `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : 
+                '249 115 22';
+        }
+        
+        console.log('Primary hex #f97316 to RGB:', hexToRgb('#f97316'));
+        console.log('Secondary hex #64748b to RGB:', hexToRgb('#64748b'));
+        
+        // Check current CSS variables
+        const root = document.documentElement;
+        console.log('Current --primary:', getComputedStyle(root).getPropertyValue('--primary'));
+        console.log('Current --secondary:', getComputedStyle(root).getPropertyValue('--secondary'));
+    </script>
+</body>
+</html>

@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import ThemeWrapper from '@/components/common/ThemeWrapper';
+import FeatureGate, { useFeature } from '@/components/common/FeatureGate';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { Tour } from "@/api/entities";
 import { User } from "@/api/entities";
 import { UserProgress } from "@/api/entities";
@@ -653,7 +656,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <ThemeWrapper>
+      <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">{t('admin.dashboardTitle')}</h1>
@@ -679,7 +683,9 @@ export default function AdminDashboard() {
         <TabsList className="mb-6">
           <TabsTrigger value="overview">{t('admin.tabs.overview')}</TabsTrigger>
           <TabsTrigger value="active_tours">{t('admin.tabs.activeTours')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('nav.analytics')}</TabsTrigger>
+          <FeatureGate feature="enableAnalytics">
+            <TabsTrigger value="analytics">{t('nav.analytics')}</TabsTrigger>
+          </FeatureGate>
           <TabsTrigger value="users">{t('admin.tabs.users')}</TabsTrigger>
           <TabsTrigger value="tours">{t('admin.tabs.tours')}</TabsTrigger>
           <TabsTrigger value="tourists">{t('admin.tabs.tourists')}</TabsTrigger>
@@ -791,13 +797,24 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AdminAnalytics
-            tours={tours}
-            users={users}
-            assignments={assignments}
-            userActivity={userActivity}
-            onRefresh={loadDashboardData}
-          />
+          <FeatureGate 
+            feature="enableAnalytics"
+            fallback={
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4 text-4xl">📊</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Disabled</h3>
+                <p className="text-gray-500">Analytics feature is currently disabled in app settings.</p>
+              </div>
+            }
+          >
+            <AdminAnalytics
+              tours={tours}
+              users={users}
+              assignments={assignments}
+              userActivity={userActivity}
+              onRefresh={loadDashboardData}
+            />
+          </FeatureGate>
         </TabsContent>
 
         <TabsContent value="users">
@@ -1702,6 +1719,7 @@ export default function AdminDashboard() {
           />
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </ThemeWrapper>
   );
 }

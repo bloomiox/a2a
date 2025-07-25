@@ -28,15 +28,18 @@ import {
 import { useLanguage } from '@/components/i18n/LanguageContext';
 import { UploadFile } from '@/api/integrations';
 import { AppSettings as AppSettingsEntity } from '@/api/entities';
+import { useAppSettings } from '@/contexts/AppSettingsContext';
 
 const AppSettings = () => {
   const { t } = useLanguage();
+  const { settings: contextSettings, updateSettings } = useAppSettings();
   const [settings, setSettings] = useState({
     // Branding
     appName: 'Base44 APP',
     logoUrl: '',
     primaryColor: '#f97316', // Orange
     secondaryColor: '#64748b', // Slate
+    themeMode: 'light', // light, dark, auto
     
     // Company Information
     companyName: 'TurbaTours',
@@ -81,10 +84,14 @@ const AppSettings = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [logoFile, setLogoFile] = useState(null);
 
-  // Load settings on component mount
+  // Load settings on component mount and when context changes
   useEffect(() => {
-    loadSettings();
-  }, []);
+    if (contextSettings) {
+      setSettings(contextSettings);
+    } else {
+      loadSettings();
+    }
+  }, [contextSettings]);
 
   const loadSettings = async () => {
     try {
@@ -100,10 +107,14 @@ const AppSettings = () => {
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      await AppSettingsEntity.save(settings);
-      console.log('Settings saved and applied:', settings);
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      const result = await updateSettings(settings);
+      if (result.success) {
+        console.log('Settings saved and applied:', settings);
+        setMessage({ type: 'success', text: 'Settings saved successfully! Changes applied across all pages.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        throw new Error(result.error || 'Failed to save settings');
+      }
     } catch (error) {
       console.error('Error saving settings:', error);
       setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
@@ -148,6 +159,7 @@ const AppSettings = () => {
         logoUrl: '',
         primaryColor: '#f97316',
         secondaryColor: '#64748b',
+        themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
         contactEmail: 'info@turbatours.com',
@@ -176,6 +188,24 @@ const AppSettings = () => {
         maintenanceMessage: 'System is under maintenance. Please try again later.',
       });
     }
+  };
+
+  const testThemeChange = (theme) => {
+    console.log('Testing theme change to:', theme);
+    const newSettings = { ...settings, themeMode: theme };
+    setSettings(newSettings);
+    
+    // Force immediate application
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    if (theme === 'auto') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.add(prefersDark ? 'dark' : 'light');
+    } else {
+      root.classList.add(theme);
+    }
+    
+    console.log('HTML classes after manual change:', root.className);
   };
 
   return (
@@ -293,6 +323,121 @@ const AppSettings = () => {
                   className="flex-1"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Color Preview */}
+          <div className="space-y-2">
+            <Label>Color Preview</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-center h-12 bg-primary text-primary-foreground rounded font-medium">
+                  Primary Color
+                </div>
+                <div className="text-xs text-center text-muted-foreground">
+                  {settings.primaryColor}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-center h-12 bg-secondary text-secondary-foreground rounded font-medium">
+                  Secondary Color
+                </div>
+                <div className="text-xs text-center text-muted-foreground">
+                  {settings.secondaryColor}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Theme Test */}
+          <div className="space-y-2">
+            <Label>Theme Test</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-3 bg-background border rounded text-center">
+                <div className="text-foreground text-sm">Background</div>
+              </div>
+              <div className="p-3 bg-card border rounded text-center">
+                <div className="text-card-foreground text-sm">Card</div>
+              </div>
+              <div className="p-3 bg-muted border rounded text-center">
+                <div className="text-muted-foreground text-sm">Muted</div>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Current HTML classes: <code>{typeof document !== 'undefined' ? document.documentElement.className : 'N/A'}</code>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="themeMode">Theme Mode</Label>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="light"
+                  name="themeMode"
+                  value="light"
+                  checked={settings.themeMode === 'light'}
+                  onChange={(e) => setSettings({ ...settings, themeMode: e.target.value })}
+                  className="w-4 h-4 text-primary"
+                />
+                <Label htmlFor="light" className="text-sm">☀️ Light</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="dark"
+                  name="themeMode"
+                  value="dark"
+                  checked={settings.themeMode === 'dark'}
+                  onChange={(e) => setSettings({ ...settings, themeMode: e.target.value })}
+                  className="w-4 h-4 text-primary"
+                />
+                <Label htmlFor="dark" className="text-sm">🌙 Dark</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="auto"
+                  name="themeMode"
+                  value="auto"
+                  checked={settings.themeMode === 'auto'}
+                  onChange={(e) => setSettings({ ...settings, themeMode: e.target.value })}
+                  className="w-4 h-4 text-primary"
+                />
+                <Label htmlFor="auto" className="text-sm">🔄 Auto</Label>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500">
+              Auto mode follows your system preference
+            </p>
+            
+            {/* Test buttons for immediate theme switching */}
+            <div className="flex gap-2 mt-2">
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline" 
+                onClick={() => testThemeChange('light')}
+              >
+                Test Light
+              </Button>
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline" 
+                onClick={() => testThemeChange('dark')}
+              >
+                Test Dark
+              </Button>
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline" 
+                onClick={() => testThemeChange('auto')}
+              >
+                Test Auto
+              </Button>
             </div>
           </div>
         </CardContent>

@@ -8,6 +8,20 @@ export default defineConfig({
   server: {
     allowedHosts: true
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+          supabase: ['@supabase/supabase-js'],
+          utils: ['clsx', 'class-variance-authority', 'tailwind-merge']
+        }
+      }
+    },
+    sourcemap: false, // Disable sourcemaps for production
+    minify: 'terser', // Better minification
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -26,15 +26,11 @@ import {
   Clock // New: for Driver History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetClose
-} from "@/components/ui/sheet";
+
 import { Separator } from "@/components/ui/separator";
 import { useLanguage, LanguageProvider } from '@/components/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import ErrorBoundary from "@/components/ErrorBoundary"; // Import the new ErrorBoundary
 
 // This is our new Design System.
@@ -235,6 +231,7 @@ function SimpleLayout({ isLoggedIn, navigate, children }) {
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <ThemeSwitcher />
             {!isLoggedIn && (
               <>
                 <Button
@@ -276,7 +273,10 @@ function PlayLayout({ children }) {
             <ChevronLeft size={22} />
             <span className="font-medium text-lg">{t('common.back')}</span>
           </Link>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeSwitcher />
+          </div>
         </div>
       </header>
       <main className="flex-1 pt-16 pb-24">
@@ -390,146 +390,7 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="text-foreground/70" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80 p-6 pt-12">
-                <div className="flex flex-col h-full">
-                  <div className="flex items-center gap-4 mb-6">
-                    {user?.profile_image ? (
-                        <img src={user.profile_image} alt={user.full_name} className="w-12 h-12 rounded-full object-cover" />
-                    ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg font-bold">
-                            {user?.full_name?.charAt(0)}
-                        </div>
-                    )}
-                    <div>
-                        <p className="font-semibold text-lg">{user?.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </div>
-                  <Separator />
-                  <nav className="flex-grow mt-6 space-y-1">
-                    {/* Hardcoded links for Sheet (as per original logic, but with new styles) */}
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Home")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <Home size={22} className="text-primary" />
-                        <span>{t('nav.home')}</span>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Explore")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <Compass size={22} className="text-primary" />
-                        <span>{t('nav.explore')}</span>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Search")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <Search size={22} className="text-primary" />
-                        <span>{t('nav.search')}</span>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Create")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <Plus size={22} className="text-primary" />
-                        <span>{t('nav.createTour')}</span>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("CreatorDashboard")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <BarChart3 size={22} className="text-primary" />
-                        <span>Analytics</span>
-                      </Link>
-                    </SheetClose>
-
-                    {showDriverNav && (
-                      <>
-                        <SheetClose asChild>
-                          <Link
-                            to={createPageUrl("Driver")}
-                            className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                          >
-                            <ClipboardList size={22} className="text-primary" />
-                            <span>{t('nav.myTours')}</span>
-                          </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                          <Link
-                            to={createPageUrl("DriverHistory")}
-                            className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                          >
-                            <Clock size={22} className="text-primary" />
-                            <span>{t('nav.history')}</span>
-                          </Link>
-                        </SheetClose>
-                      </>
-                    )}
-
-                    {showAdminNav && (
-                       <SheetClose asChild key="AdminDashboard">
-                        <Link
-                          to={createPageUrl("AdminDashboard")}
-                          className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                        >
-                          <Shield size={22} className="text-primary" />
-                          <span>{t('nav.admin')}</span>
-                        </Link>
-                      </SheetClose>
-                    )}
-
-                    <Separator className="my-4" />
-
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Profile")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <UserIcon size={22} className="text-primary" />
-                        <span>{t('nav.profile')}</span>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link
-                        to={createPageUrl("Settings")}
-                        className="flex items-center gap-4 px-4 py-3 rounded-lg text-foreground hover:bg-muted font-medium"
-                      >
-                        <Settings size={22} className="text-primary" />
-                        <span>{t('nav.settings')}</span>
-                      </Link>
-                    </SheetClose>
-                  </nav>
-
-                  <div className="mt-auto">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 px-4 py-3 h-auto"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-4 h-5 w-5" />
-                      <span className="font-medium">{t('auth.logout')}</span>
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <ThemeSwitcher />
           </div>
         </div>
       </header>
