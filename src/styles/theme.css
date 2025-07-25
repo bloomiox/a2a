@@ -1,47 +1,47 @@
 /* Theme-aware styles */
 
-/* TurbaTours Brand Color Palette - Light theme defaults */
+/* TurbaTours Clean Light Theme - Matching the design */
 :root {
   /* Brand Colors - Primary (TurbaTours Blue) */
-  --primary: 0 149 239; /* hsl(198 100% 47%) - Brand blue from logo */
-  --primary-foreground: 255 255 255; /* hsl(0 0% 100%) - White text */
-  --primary-hover: 0 127 204; /* hsl(198 100% 40%) - Darker blue for hover */
-  --primary-subtle: 242 251 255; /* hsl(198 100% 95%) - Very light blue tint */
+  --primary: 59 130 246; /* Clean blue for primary actions */
+  --primary-foreground: 255 255 255; /* White text */
+  --primary-hover: 37 99 235; /* Darker blue for hover */
+  --primary-subtle: 239 246 255; /* Very light blue tint */
   
-  /* Accent Colors - Action (TurbaTours Red/Orange) */
-  --accent: 220 38 127; /* hsl(358 86% 52%) - Brand red/orange from logo */
-  --accent-foreground: 255 255 255; /* hsl(0 0% 100%) - White text */
-  --accent-hover: 189 33 109; /* hsl(358 86% 45%) - Darker red for hover */
+  /* Accent Colors - Action (Orange from design) */
+  --accent: 249 115 22; /* Orange accent matching the design */
+  --accent-foreground: 255 255 255; /* White text */
+  --accent-hover: 234 88 12; /* Darker orange for hover */
   
-  /* Backgrounds & Surfaces */
-  --background: 249 250 251; /* hsl(240 10% 98%) - Very light off-white */
-  --card: 255 255 255; /* hsl(0 0% 100%) - Pure white for cards */
-  --card-foreground: 10 10 10; /* hsl(240 10% 3.9%) - Dark text on cards */
+  /* Backgrounds & Surfaces - Very clean and minimal */
+  --background: 248 250 252; /* Very light gray background like in design */
+  --card: 255 255 255; /* Pure white cards */
+  --card-foreground: 15 23 42; /* Dark text on cards */
   --popover: 255 255 255; /* Same as card */
-  --popover-foreground: 10 10 10;
+  --popover-foreground: 15 23 42;
   
-  /* Typography & Foreground */
-  --foreground: 10 10 10; /* hsl(240 10% 3.9%) - Main dark text */
-  --muted: 244 244 245; /* hsl(240 4.8% 95.9%) - Light gray backgrounds */
-  --muted-foreground: 115 115 115; /* hsl(240 3.8% 46.1%) - Medium gray text */
-  --subtle-foreground: 163 163 163; /* hsl(240 5% 65%) - Light gray for details */
+  /* Typography & Foreground - Clean and readable */
+  --foreground: 15 23 42; /* Main dark text - slate-800 */
+  --muted: 241 245 249; /* Very light gray for muted backgrounds */
+  --muted-foreground: 100 116 139; /* Medium gray text - slate-500 */
+  --subtle-foreground: 148 163 184; /* Light gray for subtle details - slate-400 */
   
-  /* Borders & Separators */
-  --border: 229 229 229; /* hsl(240 5.9% 90%) - Light gray borders */
-  --input: 229 229 229; /* Same as border for consistency */
-  --ring: 0 149 239; /* Same as primary for focus rings */
+  /* Borders & Separators - Minimal and clean */
+  --border: 226 232 240; /* Light borders - slate-200 */
+  --input: 241 245 249; /* Light input backgrounds - slate-100 */
+  --ring: 59 130 246; /* Blue focus rings */
   
-  /* Semantic Colors */
-  --success: 34 139 34; /* hsl(142.1 76.2% 36.3%) - Green for success */
+  /* Semantic Colors - Clean and accessible */
+  --success: 34 197 94; /* Clean green - emerald-500 */
   --success-foreground: 255 255 255;
-  --warning: 204 153 0; /* hsl(48 96% 40%) - Amber for warnings */
+  --warning: 245 158 11; /* Clean amber - amber-500 */
   --warning-foreground: 0 0 0;
-  --destructive: 220 53 69; /* hsl(0 84.2% 60.2%) - Red for errors */
-  --destructive-foreground: 250 250 250;
+  --destructive: 239 68 68; /* Clean red - red-500 */
+  --destructive-foreground: 255 255 255;
   
-  /* Secondary (will be overridden by AppSettings but with better defaults) */
-  --secondary: 244 244 245; /* Light gray */
-  --secondary-foreground: 10 10 10;
+  /* Secondary - Light and clean */
+  --secondary: 241 245 249; /* Light gray - slate-100 */
+  --secondary-foreground: 15 23 42; /* Dark text - slate-800 */
 }
 
 /* Maintenance mode styles */
@@ -104,9 +104,14 @@
   transform: translateY(0);
 }
 
-/* Theme-aware card hover effects */
+/* Clean card styling matching the design */
+.theme-wrapper .card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid rgb(var(--border));
+}
+
 .theme-wrapper .card:hover {
-  box-shadow: 0 10px 25px -5px rgba(var(--primary) / 0.1), 0 4px 6px -2px rgba(var(--primary) / 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Loading spinner with theme colors */
@@ -249,47 +254,47 @@ html.dark,
 
 html.light,
 .light {
-  /* Inherit all the root light theme variables */
-  /* Brand Colors - Primary (TurbaTours Blue) */
-  --primary: 0 149 239;
+  /* Clean light theme matching the design */
+  /* Brand Colors - Primary */
+  --primary: 59 130 246; /* Clean blue */
   --primary-foreground: 255 255 255;
-  --primary-hover: 0 127 204;
-  --primary-subtle: 242 251 255;
+  --primary-hover: 37 99 235;
+  --primary-subtle: 239 246 255;
   
-  /* Accent Colors - Action (TurbaTours Red/Orange) */
-  --accent: 220 38 127;
+  /* Accent Colors - Action */
+  --accent: 249 115 22; /* Orange accent */
   --accent-foreground: 255 255 255;
-  --accent-hover: 189 33 109;
+  --accent-hover: 234 88 12;
   
   /* Backgrounds & Surfaces */
-  --background: 249 250 251;
-  --card: 255 255 255;
-  --card-foreground: 10 10 10;
+  --background: 248 250 252; /* Very light gray background */
+  --card: 255 255 255; /* Pure white cards */
+  --card-foreground: 15 23 42; /* Dark text */
   --popover: 255 255 255;
-  --popover-foreground: 10 10 10;
+  --popover-foreground: 15 23 42;
   
   /* Typography & Foreground */
-  --foreground: 10 10 10;
-  --muted: 244 244 245;
-  --muted-foreground: 115 115 115;
-  --subtle-foreground: 163 163 163;
+  --foreground: 15 23 42; /* Main dark text */
+  --muted: 241 245 249; /* Light gray backgrounds */
+  --muted-foreground: 100 116 139; /* Medium gray text */
+  --subtle-foreground: 148 163 184; /* Light gray details */
   
   /* Borders & Separators */
-  --border: 229 229 229;
-  --input: 229 229 229;
-  --ring: 0 149 239;
+  --border: 226 232 240; /* Light borders */
+  --input: 241 245 249; /* Light input backgrounds */
+  --ring: 59 130 246; /* Blue focus rings */
   
   /* Semantic Colors */
-  --success: 34 139 34;
+  --success: 34 197 94; /* Clean green */
   --success-foreground: 255 255 255;
-  --warning: 204 153 0;
+  --warning: 245 158 11; /* Clean amber */
   --warning-foreground: 0 0 0;
-  --destructive: 220 53 69;
-  --destructive-foreground: 250 250 250;
+  --destructive: 239 68 68; /* Clean red */
+  --destructive-foreground: 255 255 255;
   
   /* Secondary */
-  --secondary: 244 244 245;
-  --secondary-foreground: 10 10 10;
+  --secondary: 241 245 249; /* Light gray */
+  --secondary-foreground: 15 23 42; /* Dark text */
 }
 
 /* Auto mode support - TurbaTours colors */
@@ -318,23 +323,23 @@ html.light,
 
 @media (prefers-color-scheme: light) {
   :root:not(.light):not(.dark) {
-    /* Apply light theme TurbaTours colors */
-    --primary: 0 149 239;
+    /* Apply clean light theme colors */
+    --primary: 59 130 246;
     --primary-foreground: 255 255 255;
-    --accent: 220 38 127;
+    --accent: 249 115 22;
     --accent-foreground: 255 255 255;
-    --background: 249 250 251;
-    --foreground: 10 10 10;
-    --card: 255 255 255;
-    --card-foreground: 10 10 10;
+    --background: 248 250 252; /* Very light gray background */
+    --foreground: 15 23 42; /* Dark text */
+    --card: 255 255 255; /* Pure white cards */
+    --card-foreground: 15 23 42;
     --popover: 255 255 255;
-    --popover-foreground: 10 10 10;
-    --border: 229 229 229;
-    --input: 229 229 229;
-    --muted: 244 244 245;
-    --muted-foreground: 115 115 115;
-    --secondary: 244 244 245;
-    --secondary-foreground: 10 10 10;
-    --ring: 0 149 239;
+    --popover-foreground: 15 23 42;
+    --border: 226 232 240; /* Light borders */
+    --input: 241 245 249; /* Light input backgrounds */
+    --muted: 241 245 249; /* Light gray backgrounds */
+    --muted-foreground: 100 116 139; /* Medium gray text */
+    --secondary: 241 245 249; /* Light gray */
+    --secondary-foreground: 15 23 42;
+    --ring: 59 130 246;
   }
 }

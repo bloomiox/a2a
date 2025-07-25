@@ -1692,8 +1692,8 @@ export const AppSettings = {
       return {
         appName: 'Base44 APP',
         logoUrl: '',
-        primaryColor: '#0095ef', // TurbaTours brand blue (hsl(198 100% 47%))
-        secondaryColor: '#f4f4f5', // Light neutral for secondary elements
+        primaryColor: '#3b82f6', // Clean blue matching the design
+        secondaryColor: '#f1f5f9', // Light slate for secondary elements
         themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
@@ -1778,7 +1778,7 @@ export const AppSettings = {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? 
           `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : 
-          '0 149 239'; // fallback to TurbaTours brand blue
+          '59 130 246'; // fallback to clean blue
       };
       
       // Helper function to calculate luminance and determine appropriate foreground color
