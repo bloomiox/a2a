@@ -816,6 +816,29 @@ const AppSettings = () => {
             <Palette className="h-4 w-4" />
             Reset Colors
           </Button>
+          
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                const { AppSettings: AppSettingsEntity } = await import('@/api/entities');
+                const success = AppSettingsEntity.forceCleanTheme();
+                if (success) {
+                  // Reload the page to apply clean theme
+                  window.location.reload();
+                } else {
+                  setMessage({ type: 'error', text: 'Failed to apply clean theme.' });
+                }
+              } catch (error) {
+                console.error('Error applying clean theme:', error);
+                setMessage({ type: 'error', text: 'Failed to apply clean theme.' });
+              }
+            }}
+            className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Force Clean Theme
+          </Button>
         </div>
 
         <Button

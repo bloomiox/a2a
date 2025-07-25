@@ -1692,8 +1692,8 @@ export const AppSettings = {
       return {
         appName: 'Base44 APP',
         logoUrl: '',
-        primaryColor: '#3b82f6', // Clean blue matching the design
-        secondaryColor: '#f1f5f9', // Light slate for secondary elements
+        primaryColor: '#3b82f6', // Clean blue for buttons and links
+        secondaryColor: '#64748b', // Neutral gray for secondary elements
         themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
@@ -1766,6 +1766,37 @@ export const AppSettings = {
     }
   },
 
+  forceCleanTheme: () => {
+    try {
+      // Clear any cached settings
+      localStorage.removeItem('appSettings');
+      
+      // Remove any inline CSS custom properties that might be overriding the theme
+      const root = document.documentElement;
+      root.style.removeProperty('--primary');
+      root.style.removeProperty('--primary-foreground');
+      root.style.removeProperty('--secondary');
+      root.style.removeProperty('--secondary-foreground');
+      root.style.removeProperty('--accent');
+      root.style.removeProperty('--accent-foreground');
+      root.style.removeProperty('--muted');
+      root.style.removeProperty('--muted-foreground');
+      root.style.removeProperty('--ring');
+      root.style.removeProperty('--chart-1');
+      root.style.removeProperty('--chart-2');
+      
+      // Force light theme
+      root.classList.remove('dark');
+      root.classList.add('light');
+      
+      console.log('Clean theme forced - all overrides removed');
+      return true;
+    } catch (error) {
+      console.error('Error forcing clean theme:', error);
+      return false;
+    }
+  },
+
   apply: (settings) => {
     try {
       // Update document title
@@ -1835,8 +1866,15 @@ export const AppSettings = {
         applyThemeMode('light');
       }
       
+      // Only apply custom colors if they're different from our clean theme defaults
+      // This preserves the clean light gray background theme
+      const cleanThemeDefaults = {
+        primaryColor: '#3b82f6', // Clean blue
+        secondaryColor: '#64748b'  // Neutral gray
+      };
+      
       // Update CSS custom properties for colors (in RGB format for Tailwind)
-      if (settings.primaryColor) {
+      if (settings.primaryColor && settings.primaryColor !== cleanThemeDefaults.primaryColor) {
         const primaryRgb = hexToRgb(settings.primaryColor);
         const primaryForeground = getContrastColor(settings.primaryColor);
         
@@ -1848,16 +1886,19 @@ export const AppSettings = {
         // Additional theme colors
         root.style.setProperty('--ring', primaryRgb);
         root.style.setProperty('--chart-1', primaryRgb);
+      } else {
+        // Use clean theme defaults - don't override CSS
+        console.log('Using clean theme primary color');
       }
       
-      if (settings.secondaryColor) {
+      if (settings.secondaryColor && settings.secondaryColor !== cleanThemeDefaults.secondaryColor) {
         const secondaryRgb = hexToRgb(settings.secondaryColor);
         const secondaryForeground = getContrastColor(settings.secondaryColor);
         
         root.style.setProperty('--secondary', secondaryRgb);
         root.style.setProperty('--secondary-foreground', secondaryForeground);
         
-        // Create a lighter version for muted backgrounds
+        // Only override muted colors if using custom secondary color
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(settings.secondaryColor);
         if (result) {
           const r = Math.min(255, parseInt(result[1], 16) + 40);
@@ -1871,6 +1912,9 @@ export const AppSettings = {
         }
         
         root.style.setProperty('--chart-2', secondaryRgb);
+      } else {
+        // Use clean theme defaults - don't override CSS
+        console.log('Using clean theme secondary color');
       }
       
       // Update favicon if logo is available
