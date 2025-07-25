@@ -20,7 +20,8 @@ export default defineConfig({
       }
     },
     sourcemap: false, // Disable sourcemaps for production
-    minify: 'terser', // Better minification
+    minify: 'esbuild', // Use esbuild for better cross-platform compatibility
+    target: 'es2020', // Ensure compatibility
   },
   resolve: {
     alias: {
