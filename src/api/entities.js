@@ -1694,7 +1694,6 @@ export const AppSettings = {
         logoUrl: '',
         primaryColor: '#3b82f6', // Clean blue for buttons and links
         secondaryColor: '#64748b', // Neutral gray for secondary elements
-        themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
         contactEmail: 'info@turbatours.com',
@@ -1771,23 +1770,26 @@ export const AppSettings = {
       // Clear any cached settings
       localStorage.removeItem('appSettings');
       
-      // Remove any inline CSS custom properties that might be overriding the theme
+      // Remove ALL inline CSS custom properties that might be overriding the theme
       const root = document.documentElement;
-      root.style.removeProperty('--primary');
-      root.style.removeProperty('--primary-foreground');
-      root.style.removeProperty('--secondary');
-      root.style.removeProperty('--secondary-foreground');
-      root.style.removeProperty('--accent');
-      root.style.removeProperty('--accent-foreground');
-      root.style.removeProperty('--muted');
-      root.style.removeProperty('--muted-foreground');
-      root.style.removeProperty('--ring');
-      root.style.removeProperty('--chart-1');
-      root.style.removeProperty('--chart-2');
+      const propertiesToRemove = [
+        '--primary', '--primary-foreground', '--primary-hover', '--primary-subtle',
+        '--secondary', '--secondary-foreground', 
+        '--accent', '--accent-foreground', '--accent-hover',
+        '--background', '--foreground',
+        '--card', '--card-foreground',
+        '--muted', '--muted-foreground',
+        '--border', '--input',
+        '--ring', '--chart-1', '--chart-2',
+        '--popover', '--popover-foreground'
+      ];
       
-      // Force light theme
-      root.classList.remove('dark');
-      root.classList.add('light');
+      propertiesToRemove.forEach(prop => {
+        root.style.removeProperty(prop);
+      });
+      
+      // Remove any theme classes
+      root.classList.remove('dark', 'light');
       
       console.log('Clean theme forced - all overrides removed');
       return true;
@@ -1828,66 +1830,37 @@ export const AppSettings = {
         return luminance > 0.5 ? '0 0 0' : '255 255 255';
       };
       
-      // Apply theme mode
+      // Remove any theme classes from previous versions
       const root = document.documentElement;
-      const applyThemeMode = (mode) => {
-        console.log('Applying theme mode:', mode);
-        root.classList.remove('light', 'dark');
-        if (mode === 'auto') {
-          // Use system preference
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const themeToApply = prefersDark ? 'dark' : 'light';
-          console.log('Auto mode detected system preference:', themeToApply);
-          root.classList.add(themeToApply);
-        } else {
-          root.classList.add(mode);
-        }
-        console.log('HTML classes after theme application:', root.className);
-      };
+      root.classList.remove('light', 'dark');
       
-      if (settings.themeMode) {
-        applyThemeMode(settings.themeMode);
-        
-        // Listen for system theme changes if auto mode
-        if (settings.themeMode === 'auto') {
-          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-          const handleChange = () => applyThemeMode('auto');
-          mediaQuery.addEventListener('change', handleChange);
-          
-          // Store cleanup function
-          window.themeCleanup = () => mediaQuery.removeEventListener('change', handleChange);
-        } else if (window.themeCleanup) {
-          window.themeCleanup();
-          delete window.themeCleanup;
-        }
-      } else {
-        // Default to light theme if no theme mode is set
-        console.log('No theme mode set, defaulting to light');
-        applyThemeMode('light');
-      }
-      
-      // Only apply custom colors if they're different from our clean theme defaults
-      // This preserves the clean light gray background theme
+      // IMPORTANT: Never override background colors - preserve clean theme
+      // Only apply accent colors for buttons, links, etc.
       const cleanThemeDefaults = {
         primaryColor: '#3b82f6', // Clean blue
         secondaryColor: '#64748b'  // Neutral gray
       };
       
       // Update CSS custom properties for colors (in RGB format for Tailwind)
+      // Only override primary color for buttons/links, NEVER background
       if (settings.primaryColor && settings.primaryColor !== cleanThemeDefaults.primaryColor) {
         const primaryRgb = hexToRgb(settings.primaryColor);
         const primaryForeground = getContrastColor(settings.primaryColor);
         
+        // Only set primary color for buttons/links - NOT background
         root.style.setProperty('--primary', primaryRgb);
         root.style.setProperty('--primary-foreground', primaryForeground);
-        root.style.setProperty('--accent', primaryRgb);
-        root.style.setProperty('--accent-foreground', primaryForeground);
-        
-        // Additional theme colors
         root.style.setProperty('--ring', primaryRgb);
         root.style.setProperty('--chart-1', primaryRgb);
+        
+        // DO NOT set accent to primary - keep them separate
+        console.log('Applied custom primary color:', settings.primaryColor);
       } else {
-        // Use clean theme defaults - don't override CSS
+        // Remove any overrides to use clean theme defaults
+        root.style.removeProperty('--primary');
+        root.style.removeProperty('--primary-foreground');
+        root.style.removeProperty('--ring');
+        root.style.removeProperty('--chart-1');
         console.log('Using clean theme primary color');
       }
       
@@ -1895,27 +1868,28 @@ export const AppSettings = {
         const secondaryRgb = hexToRgb(settings.secondaryColor);
         const secondaryForeground = getContrastColor(settings.secondaryColor);
         
+        // Only set secondary for specific elements - NOT background/muted
         root.style.setProperty('--secondary', secondaryRgb);
         root.style.setProperty('--secondary-foreground', secondaryForeground);
-        
-        // Only override muted colors if using custom secondary color
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(settings.secondaryColor);
-        if (result) {
-          const r = Math.min(255, parseInt(result[1], 16) + 40);
-          const g = Math.min(255, parseInt(result[2], 16) + 40);
-          const b = Math.min(255, parseInt(result[3], 16) + 40);
-          const mutedRgb = `${r} ${g} ${b}`;
-          const mutedForeground = getContrastColor(`#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
-          
-          root.style.setProperty('--muted', mutedRgb);
-          root.style.setProperty('--muted-foreground', mutedForeground);
-        }
-        
         root.style.setProperty('--chart-2', secondaryRgb);
+        
+        console.log('Applied custom secondary color:', settings.secondaryColor);
       } else {
-        // Use clean theme defaults - don't override CSS
+        // Remove any overrides to use clean theme defaults
+        root.style.removeProperty('--secondary');
+        root.style.removeProperty('--secondary-foreground');
+        root.style.removeProperty('--chart-2');
         console.log('Using clean theme secondary color');
       }
+      
+      // CRITICAL: Never override these background-related variables
+      // Always preserve the clean theme background
+      root.style.removeProperty('--background');
+      root.style.removeProperty('--card');
+      root.style.removeProperty('--muted');
+      root.style.removeProperty('--muted-foreground');
+      root.style.removeProperty('--accent');
+      root.style.removeProperty('--accent-foreground');
       
       // Update favicon if logo is available
       if (settings.logoUrl) {

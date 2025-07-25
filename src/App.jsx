@@ -21,6 +21,7 @@ function App() {
         const settings = await AppSettings.get();
         if (settings) {
           AppSettings.apply(settings);
+          console.log('App settings applied');
         }
       } catch (error) {
         console.error('Error loading app settings:', error);

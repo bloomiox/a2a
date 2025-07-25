@@ -1,14 +1,14 @@
-# App Settings & Theme System
+# App Settings & Styling System
 
-This document explains how to use the comprehensive App Settings and Theme System that applies appearance and feature settings globally across all pages.
+This document explains how to use the comprehensive App Settings and Styling System that applies appearance and feature settings globally across all pages.
 
 ## Overview
 
-The theme system consists of several components that work together to provide:
+The app styling system consists of several components that work together to provide:
 - **Global appearance settings** (logo, colors, branding)
 - **Feature toggles** that can enable/disable functionality
 - **Maintenance mode** support
-- **Responsive design** with theme-aware components
+- **Responsive design** with app-aware components
 - **Accessibility** features
 
 ## Core Components
@@ -32,20 +32,20 @@ function MyComponent() {
 }
 ```
 
-### 2. ThemeWrapper (`src/components/common/ThemeWrapper.jsx`)
+### 2. AppWrapper (`src/components/common/ThemeWrapper.jsx`)
 
-Wraps page content with theme-aware styling and maintenance mode support.
+Wraps page content with app-aware styling and maintenance mode support.
 
 ```jsx
-import ThemeWrapper from '@/components/common/ThemeWrapper';
+import AppWrapper from '@/components/common/ThemeWrapper';
 
 function MyPage() {
   return (
-    <ThemeWrapper>
+    <AppWrapper>
       <div className="container mx-auto">
         {/* Your page content */}
       </div>
-    </ThemeWrapper>
+    </AppWrapper>
   );
 }
 ```
@@ -125,7 +125,7 @@ import AppLogo from '@/components/common/AppLogo';
 
 ## Usage Examples
 
-### 1. Updating Page with Theme Support
+### 1. Updating Page with App Support
 
 ```jsx
 // Before
@@ -139,12 +139,12 @@ function MyPage() {
 }
 
 // After
-import ThemeWrapper from '@/components/common/ThemeWrapper';
+import AppWrapper from '@/components/common/ThemeWrapper';
 import FeatureGate from '@/components/common/FeatureGate';
 
 function MyPage() {
   return (
-    <ThemeWrapper>
+    <AppWrapper>
       <div className="container mx-auto px-4 py-6">
         <h1>My Page</h1>
         <FeatureGate 
@@ -154,23 +154,23 @@ function MyPage() {
           <AnalyticsComponent />
         </FeatureGate>
       </div>
-    </ThemeWrapper>
+    </AppWrapper>
   );
 }
 ```
 
-### 2. Using Theme Colors in Components
+### 2. Using App Colors in Components
 
 ```jsx
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 
 function MyComponent() {
-  const { getThemeColors } = useAppSettings();
-  const colors = getThemeColors();
+  const { getAppColors } = useAppSettings();
+  const colors = getAppColors();
   
   return (
     <div style={{ backgroundColor: colors.primary }}>
-      Themed content
+      Styled content
     </div>
   );
 }
@@ -209,7 +209,7 @@ export default withFeatureGate('enableAnalytics', <div>Analytics disabled</div>)
 
 ## CSS Custom Properties
 
-The theme system automatically updates CSS custom properties that can be used in your styles:
+The app system automatically updates CSS custom properties that can be used in your styles:
 
 ```css
 .my-component {
@@ -229,7 +229,7 @@ Available CSS variables:
 
 ## Maintenance Mode
 
-When `enableMaintenance` is true, the ThemeWrapper automatically shows a maintenance page:
+When `enableMaintenance` is true, the AppWrapper automatically shows a maintenance page:
 
 ```jsx
 // Settings
@@ -238,12 +238,12 @@ When `enableMaintenance` is true, the ThemeWrapper automatically shows a mainten
   maintenanceMessage: "We're updating our system. Please check back soon!"
 }
 
-// Result: All pages wrapped with ThemeWrapper will show maintenance screen
+// Result: All pages wrapped with AppWrapper will show maintenance screen
 ```
 
 ## Accessibility Features
 
-The theme system includes built-in accessibility support:
+The app system includes built-in accessibility support:
 - High contrast mode detection
 - Reduced motion support
 - Focus management
@@ -251,14 +251,14 @@ The theme system includes built-in accessibility support:
 
 ## Best Practices
 
-### 1. Always Wrap Pages with ThemeWrapper
+### 1. Always Wrap Pages with AppWrapper
 ```jsx
 // Good
 function MyPage() {
   return (
-    <ThemeWrapper>
+    <AppWrapper>
       {/* page content */}
-    </ThemeWrapper>
+    </AppWrapper>
   );
 }
 ```
@@ -289,11 +289,11 @@ function MyPage() {
 </FeatureGate>
 ```
 
-### 4. Use Theme-Aware Components
+### 4. Use App-Aware Components
 ```jsx
-// Good - Uses theme colors
+// Good - Uses app colors
 <Button className="bg-primary text-primary-foreground">
-  Themed Button
+  App Button
 </Button>
 
 // Avoid - Hard-coded colors
@@ -304,7 +304,7 @@ function MyPage() {
 
 ## Testing
 
-To test the theme system:
+To test the app system:
 
 1. **Go to Admin Dashboard → App Settings**
 2. **Change colors, logo, and feature flags**
@@ -314,20 +314,20 @@ To test the theme system:
 
 ## Migration Guide
 
-To migrate existing pages to use the theme system:
+To migrate existing pages to use the app system:
 
 1. **Import required components**:
    ```jsx
-   import ThemeWrapper from '@/components/common/ThemeWrapper';
+   import AppWrapper from '@/components/common/ThemeWrapper';
    import FeatureGate from '@/components/common/FeatureGate';
    ```
 
 2. **Wrap page content**:
    ```jsx
    return (
-     <ThemeWrapper>
+     <AppWrapper>
        {/* existing content */}
-     </ThemeWrapper>
+     </AppWrapper>
    );
    ```
 
@@ -347,4 +347,4 @@ To migrate existing pages to use the theme system:
    <AppLogo />
    ```
 
-This system ensures consistent theming and feature management across your entire application!
+This system ensures consistent styling and feature management across your entire application!

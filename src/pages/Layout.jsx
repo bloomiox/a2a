@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage, LanguageProvider } from '@/components/i18n/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+
 import ErrorBoundary from "@/components/ErrorBoundary"; // Import the new ErrorBoundary
 
 // This is our new Design System.
@@ -231,7 +231,6 @@ function SimpleLayout({ isLoggedIn, navigate, children }) {
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <ThemeSwitcher />
             {!isLoggedIn && (
               <>
                 <Button
@@ -275,7 +274,6 @@ function PlayLayout({ children }) {
           </Link>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <ThemeSwitcher />
           </div>
         </div>
       </header>
@@ -390,7 +388,6 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <ThemeSwitcher />
           </div>
         </div>
       </header>

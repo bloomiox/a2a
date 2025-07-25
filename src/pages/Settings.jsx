@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User } from "@/api/entities";
-import ThemeWrapper from '@/components/common/ThemeWrapper';
+import AppWrapper from '@/components/common/ThemeWrapper';
 import AppSettings from '@/components/admin/AppSettings';
 import {
   Card,
@@ -131,7 +131,7 @@ export default function Settings() {
   }
   
   return (
-    <ThemeWrapper>
+    <AppWrapper>
       <div className="container mx-auto px-4 py-6 pb-20">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -149,6 +149,6 @@ export default function Settings() {
         
         <AppSettings />
       </div>
-    </ThemeWrapper>
+    </AppWrapper>
   );
 }

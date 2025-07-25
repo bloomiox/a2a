@@ -39,7 +39,7 @@ const AppSettings = () => {
     logoUrl: '',
     primaryColor: '#f97316', // Orange
     secondaryColor: '#64748b', // Slate
-    themeMode: 'light', // light, dark, auto
+
     
     // Company Information
     companyName: 'TurbaTours',
@@ -159,7 +159,6 @@ const AppSettings = () => {
         logoUrl: '',
         primaryColor: '#3b82f6', // Blue for primary actions
         secondaryColor: '#6b7280', // Neutral gray for secondary elements
-        themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
         contactEmail: 'info@turbatours.com',

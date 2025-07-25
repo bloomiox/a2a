@@ -1,5 +1,5 @@
 /**
- * Theme utilities for consistent styling across the app
+ * App utilities for consistent styling across the app
  */
 
 // Get current app settings from global window object
@@ -7,13 +7,13 @@ export const getAppSettings = () => {
   return window.appSettings || {};
 };
 
-// Get theme colors
-export const getThemeColors = () => {
+// Get app colors
+export const getAppColors = () => {
   const settings = getAppSettings();
   return {
-    primary: settings.primaryColor || '#f97316',
+    primary: settings.primaryColor || '#3b82f6',
     secondary: settings.secondaryColor || '#64748b',
-    primaryRgb: hexToRgb(settings.primaryColor || '#f97316'),
+    primaryRgb: hexToRgb(settings.primaryColor || '#3b82f6'),
     secondaryRgb: hexToRgb(settings.secondaryColor || '#64748b'),
   };
 };
@@ -23,7 +23,7 @@ export const hexToRgb = (hex) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? 
     `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : 
-    '249 115 22';
+    '59 130 246';
 };
 
 // Get CSS custom property value
@@ -36,7 +36,7 @@ export const setCSSVariable = (property, value) => {
   document.documentElement.style.setProperty(property, value);
 };
 
-// Generate theme-aware button classes
+// Generate app-aware button classes
 export const getButtonClasses = (variant = 'primary', size = 'md') => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background';
   
@@ -58,7 +58,7 @@ export const getButtonClasses = (variant = 'primary', size = 'md') => {
   return `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]}`;
 };
 
-// Generate theme-aware card classes
+// Generate app-aware card classes
 export const getCardClasses = (variant = 'default') => {
   const baseClasses = 'rounded-lg border bg-card text-card-foreground shadow-sm';
   
@@ -94,13 +94,13 @@ export const getBrandingInfo = () => {
 };
 
 // Apply dynamic styles to an element
-export const applyThemeStyles = (element, styles) => {
+export const applyAppStyles = (element, styles) => {
   if (!element) return;
   
-  const colors = getThemeColors();
+  const colors = getAppColors();
   
   Object.entries(styles).forEach(([property, value]) => {
-    // Replace theme variables in the value
+    // Replace app variables in the value
     let processedValue = value
       .replace(/\$primary/g, colors.primary)
       .replace(/\$secondary/g, colors.secondary)
@@ -130,7 +130,7 @@ export const getResponsiveClasses = () => {
 
 export default {
   getAppSettings,
-  getThemeColors,
+  getAppColors,
   hexToRgb,
   getCSSVariable,
   setCSSVariable,
@@ -138,6 +138,6 @@ export default {
   getCardClasses,
   isFeatureEnabled,
   getBrandingInfo,
-  applyThemeStyles,
+  applyAppStyles,
   getResponsiveClasses
 };

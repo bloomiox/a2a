@@ -11,3 +11,17 @@ body {
   color: rgb(var(--foreground));
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Force clean theme background - override any cached settings */
+body.clean-theme-override {
+  background-color: #f8fafc !important; /* Light gray background */
+}
+
+.clean-theme-override .theme-wrapper {
+  background-color: #f8fafc !important; /* Light gray background */
+}
+
+.clean-theme-override .card {
+  background-color: #ffffff !important; /* White cards */
+  border: 1px solid #e2e8f0 !important; /* Light border */
+}

@@ -60,17 +60,19 @@ export const AppSettingsProvider = ({ children }) => {
     }
   };
 
+
+
   const isFeatureEnabled = (featureName) => {
     return settings?.[featureName] ?? true; // Default to enabled if not set
   };
 
-  const getThemeColors = () => {
+  const getAppColors = () => {
     if (!settings) return {};
     
     return {
-      primary: settings.primaryColor || '#f97316',
+      primary: settings.primaryColor || '#3b82f6', // Clean blue default
       secondary: settings.secondaryColor || '#64748b',
-      primaryRgb: hexToRgb(settings.primaryColor || '#f97316'),
+      primaryRgb: hexToRgb(settings.primaryColor || '#3b82f6'),
       secondaryRgb: hexToRgb(settings.secondaryColor || '#64748b'),
     };
   };
@@ -79,7 +81,7 @@ export const AppSettingsProvider = ({ children }) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? 
       `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : 
-      '249 115 22';
+      '59 130 246'; // Clean blue fallback
   };
 
   const value = {
@@ -87,7 +89,7 @@ export const AppSettingsProvider = ({ children }) => {
     loading,
     updateSettings,
     isFeatureEnabled,
-    getThemeColors,
+    getAppColors,
     loadSettings
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import ThemeWrapper from '@/components/common/ThemeWrapper';
+import AppWrapper from '@/components/common/ThemeWrapper';
 import FeatureGate, { useFeature } from '@/components/common/FeatureGate';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 import { User } from '@/api/entities';
@@ -165,7 +165,7 @@ export default function DriverDashboard() {
   }
 
   return (
-    <ThemeWrapper>
+    <AppWrapper>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
@@ -327,6 +327,6 @@ export default function DriverDashboard() {
         </DialogContent>
       </Dialog>
       </div>
-    </ThemeWrapper>
+    </AppWrapper>
   );
 }

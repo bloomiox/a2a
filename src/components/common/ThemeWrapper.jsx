@@ -1,7 +1,6 @@
-import React from 'react';
 import { useAppSettings } from '@/contexts/AppSettingsContext';
 
-const ThemeWrapper = ({ children, className = '' }) => {
+const AppWrapper = ({ children, className = '' }) => {
   const { settings, loading } = useAppSettings();
 
   if (loading) {
@@ -49,10 +48,10 @@ const ThemeWrapper = ({ children, className = '' }) => {
   }
 
   return (
-    <div className={`theme-wrapper ${className}`} data-theme="custom">
+    <div className={`app-wrapper ${className}`}>
       {children}
     </div>
   );
 };
 
-export default ThemeWrapper;
+export default AppWrapper;
