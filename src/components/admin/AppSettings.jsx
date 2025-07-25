@@ -157,8 +157,8 @@ const AppSettings = () => {
       setSettings({
         appName: 'Base44 APP',
         logoUrl: '',
-        primaryColor: '#f97316',
-        secondaryColor: '#64748b',
+        primaryColor: '#3b82f6', // Blue for primary actions
+        secondaryColor: '#6b7280', // Neutral gray for secondary elements
         themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
@@ -783,14 +783,40 @@ const AppSettings = () => {
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-6 border-t">
-        <Button
-          variant="outline"
-          onClick={resetToDefaults}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reset to Defaults
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={resetToDefaults}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reset to Defaults
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={async () => {
+              if (confirm('Reset colors to neutral theme? This will clear cached settings.')) {
+                try {
+                  const { AppSettings: AppSettingsEntity } = await import('@/api/entities');
+                  const result = await AppSettingsEntity.resetToDefaults();
+                  if (result.success) {
+                    setSettings(result.settings);
+                    setMessage({ type: 'success', text: 'Colors reset to neutral theme!' });
+                    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                  }
+                } catch (error) {
+                  console.error('Error resetting colors:', error);
+                  setMessage({ type: 'error', text: 'Failed to reset colors.' });
+                }
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <Palette className="h-4 w-4" />
+            Reset Colors
+          </Button>
+        </div>
 
         <Button
           onClick={handleSaveSettings}

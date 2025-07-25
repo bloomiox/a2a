@@ -1692,8 +1692,8 @@ export const AppSettings = {
       return {
         appName: 'Base44 APP',
         logoUrl: '',
-        primaryColor: '#f97316',
-        secondaryColor: '#64748b',
+        primaryColor: '#64748b', // Neutral slate for primary actions
+        secondaryColor: '#94a3b8', // Light slate for secondary elements
         themeMode: 'light',
         companyName: 'TurbaTours',
         companyDescription: 'Professional Audio Tour Platform',
@@ -1743,6 +1743,29 @@ export const AppSettings = {
     }
   },
 
+  clearCache: () => {
+    try {
+      localStorage.removeItem('appSettings');
+      console.log('App settings cache cleared');
+      return true;
+    } catch (error) {
+      console.error('Error clearing app settings cache:', error);
+      return false;
+    }
+  },
+
+  resetToDefaults: async () => {
+    try {
+      AppSettings.clearCache();
+      const defaultSettings = await AppSettings.get();
+      await AppSettings.save(defaultSettings);
+      return { success: true, settings: defaultSettings };
+    } catch (error) {
+      console.error('Error resetting to defaults:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   apply: (settings) => {
     try {
       // Update document title
@@ -1755,7 +1778,7 @@ export const AppSettings = {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? 
           `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : 
-          '249 115 22'; // fallback to orange
+          '100 116 139'; // fallback to neutral slate
       };
       
       // Helper function to calculate luminance and determine appropriate foreground color
