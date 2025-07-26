@@ -135,7 +135,9 @@ export default function Profile() {
         }
         
         // Load progress tours
+        console.log('Loading user progress for user ID:', userData.id);
         const userProgress = await UserProgress.filter({ user_id: userData.id });
+        console.log('Found user progress:', userProgress.length, 'items');
         
         const completedLocal = []; // Local array to hold completed tours for stat calculation
         const inProgressLocal = []; // Local array to hold in-progress tours for stat calculation
@@ -143,7 +145,9 @@ export default function Profile() {
         if (userProgress.length > 0) {
           // Get tours for progress items
           const tourIds = userProgress.map(p => p.tour_id);
+          console.log('Loading tours for IDs:', tourIds);
           const progressTours = await Tour.filter({ id: { $in: tourIds } });
+          console.log('Found progress tours:', progressTours.length);
           
           // Combine tour data with progress data
           const progressWithTours = progressTours.map(tour => {
@@ -154,19 +158,26 @@ export default function Profile() {
           // Separate in-progress from completed
           for (const tourWithProgress of progressWithTours) {
             const completedStops = tourWithProgress.progress?.completed_stops?.length || 0;
-            // Default fallback for total stops, as per outline
-            // In a real app, you'd fetch stops for each tour or store total stops in tour entity
-            const totalStops = 10; 
+            const totalStops = tourWithProgress.progress?.total_stops || tourWithProgress.stops?.length || 10; // Use actual stops count if available
+            
+            console.log(`Tour ${tourWithProgress.id}: ${completedStops}/${totalStops} stops completed`);
             
             if (completedStops > 0 && completedStops >= totalStops) {
               completedLocal.push(tourWithProgress);
+              console.log('Added to completed tours');
             } else if (completedStops > 0) {
               inProgressLocal.push(tourWithProgress);
+              console.log('Added to in-progress tours');
             }
           }
           
           setInProgressTours(inProgressLocal);
           setCompletedTours(completedLocal);
+          
+          console.log('Final results:', {
+            inProgress: inProgressLocal.length,
+            completed: completedLocal.length
+          });
         }
         
         // Calculate user stats using the locally determined completed and created tours
@@ -392,10 +403,13 @@ export default function Profile() {
             <Edit className="w-4 h-4 mr-2" />
             {t('profile.editProfile')}
           </Button>
-          <Button variant="outline" onClick={() => navigate(createPageUrl('Settings'))}>
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button>
+          {/* Settings button - only visible to Admin users */}
+          {user?.user_group?.includes('Admin') && (
+            <Button variant="outline" onClick={() => navigate(createPageUrl('Settings'))}>
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+          )}
           <Button variant="destructive" onClick={async () => {
             await User.logout();
             navigate(createPageUrl('Landing'));
@@ -439,9 +453,12 @@ export default function Profile() {
         <TabsContent value="profile" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">{t('profile.createdTours')}</h2>
-            <Link to={createPageUrl("Create")}>
-              <Button>{t('tours.createTour')}</Button>
-            </Link>
+            {/* Create Tour button - only visible to Admin users */}
+            {user?.user_group?.includes('Admin') && (
+              <Link to={createPageUrl("Create")}>
+                <Button>{t('tours.createTour')}</Button>
+              </Link>
+            )}
           </div>
           
           {createdTours.length > 0 ? (
@@ -464,9 +481,12 @@ export default function Profile() {
                 <p className="text-gray-500 max-w-md mx-auto mb-6">
                   {t('profile.noToursCreatedDesc')}
                 </p>
-                <Link to={createPageUrl("Create")}>
-                  <Button>{t('profile.createFirstTour')}</Button>
-                </Link>
+                {/* Create First Tour button - only visible to Admin users */}
+                {user?.user_group?.includes('Admin') && (
+                  <Link to={createPageUrl("Create")}>
+                    <Button>{t('profile.createFirstTour')}</Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}
@@ -484,7 +504,7 @@ export default function Profile() {
                   tour={tour} 
                   progress={tour.progress ? {
                     completed: tour.progress.completed_stops?.length || 0,
-                    total: 10 // Using default fallback for total stops
+                    total: tour.progress.total_stops || tour.stops?.length || 10 // Use actual stops count if available
                   } : null}
                 />
               ))}

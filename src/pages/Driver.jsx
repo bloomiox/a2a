@@ -102,7 +102,7 @@ export default function DriverDashboard() {
 
     if (!selectedAssignment || !startTourDetails.vehicle_details || !startTourDetails.group_size) {
       console.log('Missing required details, showing alert');
-      alert("Please fill in all details.");
+      alert(t('driver.fillAllDetails'));
       return;
     }
 
@@ -143,6 +143,10 @@ export default function DriverDashboard() {
       console.log('Navigating to URL:', navigationUrl);
 
       setIsStartTourDialogOpen(false);
+      
+      // Dispatch event to refresh navigation
+      window.dispatchEvent(new CustomEvent('tourStatusChanged'));
+      
       navigate(navigationUrl);
     } catch (err) {
       console.error(t('driver.errorStartingTour'), err);
@@ -191,7 +195,7 @@ export default function DriverDashboard() {
                 <CardContent className="pt-6 flex items-center gap-4">
                     <AlertTriangle className="h-6 w-6 text-red-600" />
                     <div>
-                        <h4 className="font-semibold text-red-800">An Error Occurred</h4>
+                        <h4 className="font-semibold text-red-800">{t('driver.anErrorOccurred')}</h4>
                         <p className="text-red-700">{error}</p>
                     </div>
                 </CardContent>
@@ -203,7 +207,7 @@ export default function DriverDashboard() {
           <Card className="border-primary shadow-lg">
             <CardHeader>
               <CardTitle className="text-primary">{t('driver.tourInProgress')}</CardTitle>
-              <CardDescription>Your current active tour. Click to continue.</CardDescription>
+              <CardDescription>{t('driver.currentActiveTour')}</CardDescription>
             </CardHeader>
             <CardContent>
               {activeAssignments.map(assignment => {
@@ -214,11 +218,11 @@ export default function DriverDashboard() {
                     feature="enableLiveTracking"
                     fallback={
                       <div className="p-4 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300">
-                        <h3 className="text-lg font-semibold text-gray-600">{tour?.title || 'Loading...'}</h3>
+                        <h3 className="text-lg font-semibold text-gray-600">{tour?.title || t('driver.loading')}</h3>
                         <p className="text-gray-500 text-sm mt-1">{tour?.description}</p>
                         <div className="flex justify-end mt-4">
                           <Button disabled variant="outline">
-                            Navigation Disabled
+                            {t('driver.navigationDisabled')}
                           </Button>
                         </div>
                       </div>
@@ -226,11 +230,11 @@ export default function DriverDashboard() {
                   >
                     <div className="p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
                          onClick={() => navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`)}>
-                      <h3 className="text-lg font-semibold">{tour?.title || 'Loading...'}</h3>
+                      <h3 className="text-lg font-semibold">{tour?.title || t('driver.loading')}</h3>
                       <p className="text-muted-foreground text-sm mt-1">{tour?.description}</p>
                       <div className="flex justify-end mt-4">
                         <Button>
-                          Continue Navigation <ChevronsRight className="h-4 w-4 ml-2" />
+                          {t('driver.continueNavigation')} <ChevronsRight className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
                     </div>
@@ -258,8 +262,8 @@ export default function DriverDashboard() {
                 return (
                   <Card key={assignment.id}>
                     <CardHeader>
-                      <CardTitle>{tour?.title || 'Loading...'}</CardTitle>
-                      <Badge variant="secondary" className="w-fit mt-2">Assigned</Badge>
+                      <CardTitle>{tour?.title || t('driver.loading')}</CardTitle>
+                      <Badge variant="secondary" className="w-fit mt-2">{t('driver.assigned')}</Badge>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2 text-sm text-muted-foreground">
@@ -288,40 +292,40 @@ export default function DriverDashboard() {
       <Dialog open={isStartTourDialogOpen} onOpenChange={setIsStartTourDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Start Tour: {tours[selectedAssignment?.tour_id]?.title}</DialogTitle>
+            <DialogTitle>{t('driver.startTourDialogTitle')}: {tours[selectedAssignment?.tour_id]?.title}</DialogTitle>
             <DialogDescription>
-              Please confirm the details for this tour before starting.
+              {t('driver.startTourDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="vehicle-details">Vehicle Details</Label>
+              <Label htmlFor="vehicle-details">{t('driver.vehicleDetails')}</Label>
               <Input
                 id="vehicle-details"
-                placeholder="e.g., White Ford Transit, ABC-123"
+                placeholder={t('driver.vehicleDetailsPlaceholder')}
                 value={startTourDetails.vehicle_details}
                 onChange={(e) => setStartTourDetails({ ...startTourDetails, vehicle_details: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="group-size">Number of Tourists</Label>
+              <Label htmlFor="group-size">{t('driver.numberOfTourists')}</Label>
               <Input
                 id="group-size"
                 type="number"
-                placeholder="e.g., 8"
+                placeholder={t('driver.numberOfTouristsPlaceholder')}
                 value={startTourDetails.group_size}
                 onChange={(e) => setStartTourDetails({ ...startTourDetails, group_size: e.target.value })}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsStartTourDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsStartTourDialogOpen(false)}>{t('common.cancel')}</Button>
             <Button 
               onClick={handleStartTour}
               disabled={isStartingTour || !startTourDetails.vehicle_details || !startTourDetails.group_size}
             >
               {isStartingTour && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm & Start Tour
+              {t('driver.confirmStartTour')}
             </Button>
           </DialogFooter>
         </DialogContent>

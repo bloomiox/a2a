@@ -291,6 +291,7 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
   const { t } = useLanguage();
   const location = useLocation(); // To determine active link for footer
   const [driverTourId, setDriverTourId] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch driver's active tour assignment
   useEffect(() => {
@@ -323,7 +324,21 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
     };
 
     fetchDriverAssignment();
-  }, [showDriverNav, user?.id]);
+  }, [showDriverNav, user?.id, refreshTrigger]);
+
+  // Listen for tour status changes to refresh the navigation
+  useEffect(() => {
+    const handleTourStatusChange = () => {
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    // Listen for custom events that might be dispatched when tour status changes
+    window.addEventListener('tourStatusChanged', handleTourStatusChange);
+    
+    return () => {
+      window.removeEventListener('tourStatusChanged', handleTourStatusChange);
+    };
+  }, []);
   
   const homeUrl = useMemo(() => {
     if (showAdminNav) return createPageUrl("AdminDashboard");

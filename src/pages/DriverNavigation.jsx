@@ -122,7 +122,7 @@ export default function DriverNavigation() {
                 const [tourData, stopsData, assignmentData, audioTracksData] = await Promise.all([
                     Tour.get(tourId),
                     TourStop.filter({ tour_id: tourId }, 'position'),
-                    TourAssignment.filter({ tour_id: tourId, driver_id: currentUser.id, status: 'in_progress' }, '-created_at', 1),
+                    TourAssignment.filter({ tour_id: tourId, driver_id: currentUser.id, status: { $in: ['assigned', 'in_progress'] } }, '-created_at', 1),
                     AudioTrack.filter({ tour_id: tourId })
                 ]);
 
@@ -135,13 +135,31 @@ export default function DriverNavigation() {
 
                 if (!tourData) throw new Error(t('driver.navigation.tourNotFound'));
                 if (!assignmentData || assignmentData.length === 0) {
-                    console.error('No assignment found with status in_progress for tour:', tourId, 'and driver:', currentUser.id);
+                    console.error('No assignment found with status assigned or in_progress for tour:', tourId, 'and driver:', currentUser.id);
                     throw new Error(t('driver.navigation.assignmentNotFound'));
                 }
 
                 setTour(tourData);
                 setStops(stopsData || []);
-                setAssignment(assignmentData[0]);
+                
+                // If the assignment is still in 'assigned' status, automatically start it
+                let currentAssignment = assignmentData[0];
+                if (currentAssignment.status === 'assigned') {
+                    try {
+                        console.log('Auto-starting assigned tour...');
+                        const updatedAssignment = await TourAssignment.update(currentAssignment.id, {
+                            status: 'in_progress',
+                            start_time: new Date().toISOString()
+                        });
+                        currentAssignment = updatedAssignment;
+                        console.log('Tour auto-started successfully');
+                    } catch (updateError) {
+                        console.error('Error auto-starting tour:', updateError);
+                        // Continue with the assigned status if update fails
+                    }
+                }
+                
+                setAssignment(currentAssignment);
                 setAudioTracks(audioTracksData || []);
 
             } catch (err) {

@@ -216,7 +216,7 @@ export default function DriverHistory() {
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{assignment.completed_stops?.length || 0} stops completed</span>
+                          <span>{assignment.completed_stops?.length || 0} {t('driver.navigation.stopsCompleted')}</span>
                         </div>
                       </div>
 
@@ -275,7 +275,7 @@ export default function DriverHistory() {
                           {assignment.end_time && (
                             <div className="flex items-center gap-2 text-sm">
                               <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span>Completed: {format(new Date(assignment.end_time), 'HH:mm')}</span>
+                              <span>{t('driver.navigation.completedAt')}: {format(new Date(assignment.end_time), 'HH:mm')}</span>
                             </div>
                           )}
                         </div>
