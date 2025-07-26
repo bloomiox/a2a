@@ -50,11 +50,35 @@ export default function AudioController({
   const audioTracks = currentStop?.audio_tracks || [];
   const currentTrack = audioTracks.find(track => track.language === selectedLanguage) || audioTracks[0];
 
+  // Debug logging for audio tracks
+  useEffect(() => {
+    if (currentStop) {
+      console.log('AudioController - Current stop:', currentStop.title);
+      console.log('AudioController - Available audio tracks:', audioTracks.length);
+      console.log('AudioController - Current track:', currentTrack);
+      if (currentTrack) {
+        console.log('AudioController - Audio URL:', currentTrack.audio_url);
+      }
+    }
+  }, [currentStop, audioTracks, currentTrack]);
+
   // Initialize audio when track changes
   useEffect(() => {
     if (!currentTrack?.audio_url) {
       setAudioReady(false);
       setError("No audio available for this stop");
+      return;
+    }
+
+    // Validate audio URL format
+    const validAudioExtensions = ['.mp3', '.wav', '.ogg', '.m4a'];
+    const hasValidExtension = validAudioExtensions.some(ext => 
+      currentTrack.audio_url.toLowerCase().includes(ext)
+    );
+    
+    if (!hasValidExtension && !currentTrack.audio_url.startsWith('blob:')) {
+      setError("Invalid audio file format");
+      setAudioReady(false);
       return;
     }
 
@@ -117,7 +141,10 @@ export default function AudioController({
 
   const handleError = (e) => {
     console.error('Audio error:', e);
-    setError("Failed to load audio");
+    const errorMessage = e.target?.error?.code === 4 ? 
+      "Audio file not found or invalid format" : 
+      "Failed to load audio";
+    setError(errorMessage);
     setAudioReady(false);
     setIsPlaying(false);
   };
@@ -221,7 +248,12 @@ export default function AudioController({
     return (
       <Card className={`${className}`}>
         <CardContent className="p-6 text-center">
-          <p className="text-gray-500">No audio available for this stop</p>
+          <div className="space-y-2">
+            <p className="text-gray-500">No audio available for this stop</p>
+            <p className="text-xs text-gray-400">
+              Audio files may need to be uploaded for "{currentStop?.title}"
+            </p>
+          </div>
         </CardContent>
       </Card>
     );

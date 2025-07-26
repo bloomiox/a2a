@@ -374,8 +374,25 @@ export default function PlayPage() {
           });
         }
       },
-      (error) => console.error('Geolocation error:', error),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      (error) => {
+        console.error('Geolocation error:', error);
+        // Handle different geolocation errors gracefully
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            console.warn('Geolocation permission denied by user');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            console.warn('Geolocation position unavailable');
+            break;
+          case error.TIMEOUT:
+            console.warn('Geolocation request timed out');
+            break;
+          default:
+            console.warn('Unknown geolocation error');
+            break;
+        }
+      },
+      { enableHighAccuracy: false, maximumAge: 30000, timeout: 15000 }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);

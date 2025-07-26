@@ -61,6 +61,13 @@ const PlayMap = ({
           if (isMounted) setMapLoaded(true);
         });
 
+        map.on('error', (e) => {
+          console.error('Map error:', e);
+          if (e.error?.message?.includes('styleimagemissing')) {
+            console.warn('Map style image missing, continuing with default style');
+          }
+        });
+
         mapInstanceRef.current = map;
       } catch (err) {
         if (isMounted) setError("Failed to create map.");
