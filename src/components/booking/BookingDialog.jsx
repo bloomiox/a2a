@@ -216,12 +216,28 @@ export default function BookingDialog({ tour, user, isOpen, onClose }) {
             processed_at: paymentResult.processed_at
           });
 
-          // Update booking status to confirmed
-          await TourBooking.update(booking.id, { status: 'confirmed' });
+          // Update booking status to confirmed (only for authenticated users)
+          if (user) {
+            await TourBooking.update(booking.id, { status: 'confirmed' });
+          } else {
+            // For guest bookings, update the mock booking status
+            booking.status = 'confirmed';
+          }
         } catch (paymentError) {
           console.error('Payment processing failed:', paymentError);
-          // Delete the booking if payment failed
-          await TourBooking.delete(booking.id);
+          // Delete the booking if payment failed (only for authenticated users)
+          if (user) {
+            try {
+              await TourBooking.delete(booking.id);
+            } catch (deleteError) {
+              console.error('Error deleting failed booking:', deleteError);
+            }
+          } else {
+            // For guest bookings, clean up localStorage
+            if (booking._storageKey) {
+              localStorage.removeItem(booking._storageKey);
+            }
+          }
           throw new Error(`Payment failed: ${paymentError.message}`);
         }
       }
