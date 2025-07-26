@@ -58,6 +58,8 @@ export default function AudioController({
       console.log('AudioController - Current track:', currentTrack);
       if (currentTrack) {
         console.log('AudioController - Audio URL:', currentTrack.audio_url);
+        console.log('AudioController - Audio URL length:', currentTrack.audio_url?.length);
+        console.log('AudioController - Audio URL starts with:', currentTrack.audio_url?.substring(0, 50));
       }
     }
   }, [currentStop, audioTracks, currentTrack]);
@@ -71,15 +73,36 @@ export default function AudioController({
     }
 
     // Validate audio URL format
-    const validAudioExtensions = ['.mp3', '.wav', '.ogg', '.m4a'];
-    const hasValidExtension = validAudioExtensions.some(ext => 
-      currentTrack.audio_url.toLowerCase().includes(ext)
-    );
-    
-    if (!hasValidExtension && !currentTrack.audio_url.startsWith('blob:')) {
-      setError("Invalid audio file format");
+    const audioUrl = currentTrack.audio_url.trim();
+    if (!audioUrl) {
+      setError("Audio URL is empty");
       setAudioReady(false);
       return;
+    }
+
+    // Check if URL is accessible
+    const validateAudioUrl = async () => {
+      try {
+        const response = await fetch(audioUrl, { method: 'HEAD' });
+        if (!response.ok) {
+          throw new Error(`Audio file not accessible (${response.status})`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && !contentType.startsWith('audio/')) {
+          throw new Error(`Invalid content type: ${contentType}`);
+        }
+      } catch (fetchError) {
+        console.error('Audio URL validation failed:', fetchError);
+        setError(`Audio file not accessible: ${fetchError.message}`);
+        setAudioReady(false);
+        return;
+      }
+    };
+
+    // Only validate HTTP URLs, skip blob URLs and data URLs
+    if (audioUrl.startsWith('http')) {
+      validateAudioUrl();
     }
 
     setError(null);
@@ -93,7 +116,7 @@ export default function AudioController({
       audioRef.current.removeEventListener('error', handleError);
     }
 
-    audioRef.current = new Audio(currentTrack.audio_url);
+    audioRef.current = new Audio();
     audioRef.current.volume = isMuted ? 0 : volume;
     audioRef.current.playbackRate = playbackRate;
 
@@ -101,6 +124,12 @@ export default function AudioController({
     audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
     audioRef.current.addEventListener('ended', handleEnded);
     audioRef.current.addEventListener('error', handleError);
+    audioRef.current.addEventListener('canplay', () => {
+      console.log('Audio can play:', currentTrack.audio_url);
+    });
+
+    // Set the source after adding event listeners
+    audioRef.current.src = currentTrack.audio_url;
 
     return () => {
       if (audioRef.current) {
@@ -141,9 +170,29 @@ export default function AudioController({
 
   const handleError = (e) => {
     console.error('Audio error:', e);
-    const errorMessage = e.target?.error?.code === 4 ? 
-      "Audio file not found or invalid format" : 
-      "Failed to load audio";
+    console.error('Audio URL that failed:', currentTrack?.audio_url);
+    
+    let errorMessage = "Failed to load audio";
+    
+    if (e.target?.error) {
+      switch (e.target.error.code) {
+        case 1: // MEDIA_ERR_ABORTED
+          errorMessage = "Audio loading was aborted";
+          break;
+        case 2: // MEDIA_ERR_NETWORK
+          errorMessage = "Network error while loading audio";
+          break;
+        case 3: // MEDIA_ERR_DECODE
+          errorMessage = "Audio file is corrupted or invalid format";
+          break;
+        case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+          errorMessage = "Audio file not found or format not supported";
+          break;
+        default:
+          errorMessage = `Audio error (code: ${e.target.error.code})`;
+      }
+    }
+    
     setError(errorMessage);
     setAudioReady(false);
     setIsPlaying(false);
@@ -275,8 +324,24 @@ export default function AudioController({
 
         {/* Error Display */}
         {error && (
-          <div className="text-center p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-            {error}
+          <div className="text-center p-3 bg-red-50 text-red-700 rounded-lg text-sm space-y-2">
+            <div>{error}</div>
+            {currentTrack?.audio_url && (
+              <div className="text-xs text-gray-600">
+                <div>URL: {currentTrack.audio_url.substring(0, 100)}...</div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    console.log('Full audio URL:', currentTrack.audio_url);
+                    window.open(currentTrack.audio_url, '_blank');
+                  }}
+                  className="mt-1"
+                >
+                  Test URL
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

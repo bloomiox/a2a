@@ -124,6 +124,18 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
       
       console.log("File uploaded successfully, URL:", result.url);
       
+      // Validate that the uploaded URL is accessible
+      try {
+        const testResponse = await fetch(result.url, { method: 'HEAD' });
+        if (!testResponse.ok) {
+          throw new Error(`Uploaded file not accessible: ${testResponse.status}`);
+        }
+        console.log("Upload URL validation successful");
+      } catch (validationError) {
+        console.error("Upload URL validation failed:", validationError);
+        throw new Error(`Upload succeeded but file is not accessible: ${validationError.message}`);
+      }
+      
       // Get duration of the audio file
       const audio = new Audio();
       audio.src = URL.createObjectURL(file);
