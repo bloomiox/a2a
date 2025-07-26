@@ -44,7 +44,7 @@ export default function ReportIssue() {
       
       // Send email to support
       await SendEmail({
-        to: "support@audiotour.com", // Replace with actual support email
+        to: "support@audioguide.com", // Replace with actual support email
         subject: `${t('driver.reportIssue')}: ${formData.title}`,
         body: `
 ${t('driver.issueType')}: ${formData.issueType}

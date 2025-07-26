@@ -341,7 +341,7 @@ To migrate existing pages to use the app system:
 4. **Replace hard-coded branding** with AppLogo component:
    ```jsx
    // Before
-   <h1>TurbaTours</h1>
+   <h1>AudioGuide</h1>
    
    // After
    <AppLogo />

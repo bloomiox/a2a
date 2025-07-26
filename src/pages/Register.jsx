@@ -78,6 +78,19 @@ export default function Register() {
       
       console.log("Attempting to sign up user:", formData.email);
       
+      // Get the correct redirect URL based on environment
+      const getRedirectUrl = () => {
+        // Use environment variable if available
+        if (import.meta.env.VITE_SITE_URL) {
+          return import.meta.env.VITE_SITE_URL;
+        }
+        
+        if (import.meta.env.PROD) {
+          return 'https://app.bloom-travel.com';
+        }
+        return 'http://localhost:5173';
+      };
+
       // Try signup with minimal metadata first
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -86,7 +99,9 @@ export default function Register() {
           data: {
             // Only include essential data to avoid trigger issues
             email: formData.email
-          }
+          },
+          // Set the redirect URL for email confirmation
+          emailRedirectTo: getRedirectUrl()
         }
       });
 
@@ -263,28 +278,28 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('auth.password')}</Label>
                   <Input
                     id="password"
                     required
                     type="password"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     minLength={6}
                     disabled={loading}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     required
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    placeholder="Confirm your password"
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
                     minLength={6}
                     disabled={loading}
                   />

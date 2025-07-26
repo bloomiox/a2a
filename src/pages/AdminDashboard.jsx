@@ -66,6 +66,7 @@ import {
   Download,
   Radio,
   Mic,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -81,6 +82,7 @@ import { useLanguage } from '@/components/i18n/LanguageContext';
 import { DriverLocation } from "@/api/entities";
 import { TourStop } from "@/api/entities";
 import { AudioTrack } from "@/api/entities";
+import { TourSignup } from "@/api/entities";
 import { exportTourStopsCSV } from "@/api/functions";
 // Removed: import { audioRelay } from '@/api/functions';
 
@@ -96,6 +98,167 @@ const DriverTrackingMap = ({ tour, driverLocation }) => {
         <p>No tour data to display.</p>
       )}
     </div>
+  );
+};
+
+const TourSignupsTable = () => {
+  const [signups, setSignups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    loadSignups();
+  }, []);
+
+  const loadSignups = async () => {
+    try {
+      setLoading(true);
+      const signupsData = await TourSignup.filter({}, '-created_at', 100);
+      
+      // Get tour details for each signup
+      const signupsWithTours = await Promise.all(
+        signupsData.map(async (signup) => {
+          try {
+            const tour = await Tour.get(signup.tour_id);
+            return { ...signup, tour };
+          } catch (error) {
+            return { ...signup, tour: null };
+          }
+        })
+      );
+      
+      setSignups(signupsWithTours);
+    } catch (error) {
+      console.error('Error loading signups:', error);
+      setSignups([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSignupStatus = async (signupId, newStatus) => {
+    try {
+      await TourSignup.update(signupId, { status: newStatus });
+      loadSignups(); // Reload data
+    } catch (error) {
+      console.error('Error updating signup status:', error);
+    }
+  };
+
+  const filteredSignups = signups.filter(signup => 
+    signup.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    signup.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    signup.tour?.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Input
+          placeholder="Search signups..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button onClick={loadSignups} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+      
+      <ScrollArea className="h-[400px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Tour</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredSignups.map((signup) => (
+              <TableRow key={signup.id}>
+                <TableCell className="font-medium">{signup.name}</TableCell>
+                <TableCell>{signup.email}</TableCell>
+                <TableCell>{signup.tour?.title || 'Unknown Tour'}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    signup.status === 'confirmed' ? 'success' :
+                    signup.status === 'pending' ? 'secondary' :
+                    signup.status === 'cancelled' ? 'destructive' : 'outline'
+                  }>
+                    {signup.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {signup.created_at ? format(new Date(signup.created_at), 'MMM d, yyyy') : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    {signup.status === 'pending' && (
+                      <Button
+                        size="sm"
+                        onClick={() => updateSignupStatus(signup.id, 'confirmed')}
+                      >
+                        Confirm
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateSignupStatus(signup.id, 'cancelled')}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
+  );
+};
+
+const TouristManagement = ({ tourists, userActivity }) => {
+  return (
+    <ScrollArea className="h-[400px]">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Total Tours</TableHead>
+            <TableHead>Completed Tours</TableHead>
+            <TableHead>Last Active</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tourists.map((tourist) => (
+            <TableRow key={tourist.id}>
+              <TableCell className="font-medium">{tourist.full_name || 'N/A'}</TableCell>
+              <TableCell>{tourist.email || 'N/A'}</TableCell>
+              <TableCell>{(userActivity.filter(act => act.user_id === tourist.id) || []).length}</TableCell>
+              <TableCell>{(userActivity.filter(act => act.user_id === tourist.id && act.status === 'completed') || []).length}</TableCell>
+              <TableCell>
+                {tourist.last_active_date ? 
+                  format(new Date(tourist.last_active_date), 'MMM d, yyyy') :
+                  'Never'
+                }
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </ScrollArea>
   );
 };
 
@@ -689,6 +852,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="users">{t('admin.tabs.users')}</TabsTrigger>
           <TabsTrigger value="tours">{t('admin.tabs.tours')}</TabsTrigger>
           <TabsTrigger value="tourists">{t('admin.tabs.tourists')}</TabsTrigger>
+          <TabsTrigger value="crm">CRM & Signups</TabsTrigger>
           <TabsTrigger value="activity_log">{t('admin.tabs.activityLog')}</TabsTrigger>
           <TabsTrigger value="system_errors">{t('admin.tabs.systemErrors')}</TabsTrigger>
           <TabsTrigger value="app_settings">{t('admin.tabs.appSettings')}</TabsTrigger>
@@ -1377,6 +1541,30 @@ export default function AdminDashboard() {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="crm">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tour Signups</CardTitle>
+                <CardDescription>Manage tourist signups for public tours</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TourSignupsTable />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Tourist Management</CardTitle>
+                <CardDescription>View and manage registered tourists</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TouristManagement tourists={filteredTourists} userActivity={userActivity} />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="activity_log">

@@ -25,7 +25,7 @@ const AppWrapper = ({ children, className = '' }) => {
               />
             ) : (
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                {settings.companyName || 'TurbaTours'}
+                {settings.companyName || 'AudioGuide'}
               </h1>
             )}
           </div>

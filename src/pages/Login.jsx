@@ -66,7 +66,7 @@ export default function Login() {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+{t('common.back')}
           </Button>
         </div>
 
@@ -74,7 +74,7 @@ export default function Login() {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t('auth.login')}</CardTitle>
             <CardDescription>
-              Sign in to your account to continue
+              {t('auth.loginDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -86,13 +86,13 @@ export default function Login() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -103,13 +103,13 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -124,10 +124,10 @@ export default function Login() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? (
+{loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {t('auth.signingIn')}
                   </>
                 ) : (
                   t('auth.login')
@@ -136,12 +136,12 @@ export default function Login() {
             </form>
 
             <div className="mt-6 text-center text-sm text-gray-600">
-              Don't have an account?{' '}
+              {t('auth.noAccount')}{' '}
               <Link
                 to={createPageUrl("Register")}
                 className="text-indigo-600 hover:text-indigo-800 font-medium"
               >
-                Sign up
+                {t('auth.signup')}
               </Link>
             </div>
           </CardContent>

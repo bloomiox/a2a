@@ -1,8 +1,7 @@
-# Base44 App
+# AudioGuide App
 
-
-This app was created automatically by Base44.
-It's a Vite+React app that communicates with the Base44 API.
+AudioGuide is a professional audio tour platform developed by Bloom Travel.
+It's a Vite+React app that provides immersive audio tour experiences.
 
 ## Running the app
 
@@ -17,4 +16,4 @@ npm run dev
 npm run build
 ```
 
-For more information and support, please contact Base44 support at app@base44.com.
+For more information and support, please contact Bloom Travel support at support@bloom-travel.com.

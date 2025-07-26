@@ -4,7 +4,7 @@ import { AppSettings } from '@/api/entities';
 const AppLogo = ({ className = "text-xl font-bold text-gray-900" }) => {
   const [settings, setSettings] = useState({
     logoUrl: '',
-    companyName: 'TurbaTours'
+    companyName: 'AudioGuide'
   });
 
   useEffect(() => {
@@ -15,7 +15,7 @@ const AppLogo = ({ className = "text-xl font-bold text-gray-900" }) => {
       console.log('AppLogo: Settings changed', event.detail);
       setSettings({
         logoUrl: event.detail.logoUrl || '',
-        companyName: event.detail.companyName || 'TurbaTours'
+        companyName: event.detail.companyName || 'AudioGuide'
       });
     };
     
@@ -33,11 +33,22 @@ const AppLogo = ({ className = "text-xl font-bold text-gray-900" }) => {
       if (appSettings) {
         setSettings({
           logoUrl: appSettings.logoUrl || '',
-          companyName: appSettings.companyName || 'TurbaTours'
+          companyName: appSettings.companyName || 'AudioGuide'
+        });
+      } else {
+        // Force use AudioGuide if no settings found
+        setSettings({
+          logoUrl: '',
+          companyName: 'AudioGuide'
         });
       }
     } catch (error) {
       console.error('Error loading app settings for logo:', error);
+      // Fallback to AudioGuide on error
+      setSettings({
+        logoUrl: '',
+        companyName: 'AudioGuide'
+      });
     }
   };
 

@@ -40,7 +40,7 @@ export default function TourCompleted({ isDriverView = false }) {
         <p className="text-gray-600 mb-6">
           {isDriverView 
             ? "Great job! The tour has been successfully completed." 
-            : "Thank you for exploring with AudioTour!"}
+            : "Thank you for exploring with AudioGuide!"}
         </p>
         
         <Button onClick={handleDone} size="lg" className="w-full">

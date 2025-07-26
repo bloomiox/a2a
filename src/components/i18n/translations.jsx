@@ -296,6 +296,123 @@ const translations = {
       "Driver": "Driver",
       "Tourist": "Tourist"
     },
+    "auth": {
+      "login": "Login",
+      "signup": "Sign Up",
+      "logout": "Logout",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "fullName": "Full Name",
+      "phone": "Phone Number",
+      "desiredRole": "Desired Role",
+      "experience": "Experience",
+      "availability": "Availability",
+      "about": "About You",
+      "createAccount": "Create Account",
+      "loginDescription": "Sign in to your account to continue",
+      "registerDescription": "Create your account to get started",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "fullNamePlaceholder": "Enter your full name",
+      "phonePlaceholder": "Enter your phone number",
+      "selectRole": "Select your role",
+      "roleDescription": "Choose the role that best describes how you plan to use AudioGuide",
+      "experiencePlaceholder": "Describe your relevant experience",
+      "selectAvailability": "Select your availability",
+      "aboutPlaceholder": "Tell us about yourself",
+      "aboutDescription": "Optional: Share a bit about yourself or your interests",
+      "signingIn": "Signing in...",
+      "register": "Register",
+      "noAccount": "Don't have an account?",
+      "alreadyHaveAccount": "Already have an account?",
+      "registrationSuccess": "Registration Successful!",
+      "registrationPending": "Your account has been created successfully. You can now log in.",
+      "backToLogin": "Back to Login",
+      "roles": {
+        "tourist": "Tourist",
+        "guide": "Tour Guide",
+        "driver": "Driver"
+      },
+      "availability": {
+        "fullTime": "Full Time",
+        "partTime": "Part Time",
+        "weekends": "Weekends Only"
+      }
+    },
+    "landing": {
+      "hero": {
+        "badge": "#1 AudioGuide Platform",
+        "title": "Explore the World with",
+        "subtitle": "Immersive AudioGuide Tours",
+        "description": "Discover cities, museums, and landmarks through expertly crafted audio experiences.",
+        "startButton": "Start Your Journey"
+      },
+      "tours": {
+        "title": "Featured Tours",
+        "subtitle": "Join our expertly guided tours and explore amazing destinations",
+        "signupButton": "Sign Up for Tour",
+        "noTours": "No Tours Available",
+        "noToursDesc": "Check back soon for exciting new tours!"
+      },
+      "signup": {
+        "title": "Sign Up for Tour",
+        "description": "Join \"{tourTitle}\" and we'll contact you with details.",
+        "nameLabel": "Full Name",
+        "emailLabel": "Email",
+        "phoneLabel": "Phone Number",
+        "messageLabel": "Message (Optional)",
+        "namePlaceholder": "Enter your full name",
+        "emailPlaceholder": "Enter your email",
+        "phonePlaceholder": "Enter your phone number",
+        "messagePlaceholder": "Any special requests or questions?",
+        "submitButton": "Sign Up",
+        "submitting": "Signing Up...",
+        "cancel": "Cancel",
+        "success": "Signup Successful!",
+        "successDesc": "We'll contact you soon with tour details.",
+        "error": "Signup Failed",
+        "errorDesc": "Please try again later."
+      },
+      "features": {
+        "title": "Everything You Need for Perfect AudioGuide Tours",
+        "subtitle": "Discover all the features that make exploring with AudioGuide unique",
+        "globalTours": {
+          "title": "Global AudioGuide Tours",
+          "description": "Explore 1000+ cities and landmarks worldwide with expert audio guides"
+        },
+        "gpsNavigation": {
+          "title": "Smart GPS Navigation",
+          "description": "Real-time directions with location-triggered audio playback"
+        },
+        "audioQuality": {
+          "title": "Premium Audio Quality",
+          "description": "Crystal clear narration with immersive 3D sound effects"
+        },
+        "offlineMode": {
+          "title": "Offline Mode",
+          "description": "Download tours for offline use without internet connection"
+        },
+        "expertCreators": {
+          "title": "Expert Creators",
+          "description": "Tours created by local historians, guides, and enthusiasts"
+        },
+        "multiLanguage": {
+          "title": "Multi-Language Support",
+          "description": "Available in 25+ languages with native speakers"
+        }
+      },
+      "stats": {
+        "audioTours": "AudioGuide Tours",
+        "countries": "Countries",
+        "happyUsers": "Happy Users"
+      },
+      "cta": {
+        "title": "Ready to Start Your Audio Journey?",
+        "button": "Create Your Free Account"
+      }
+    },
     "roles": {
       "admin": "Admin",
       "user": "User"
@@ -859,7 +976,7 @@ const translations = {
       step3: 'Uronite u iskustvo',
       step3Desc: 'Slušajte fascinantne priče i činjenice tačno kada vam zatrebaju.',
       ctaTitle: 'Spremni za istraživanje?',
-      ctaSubtitle: 'Pridružite se AudioTour danas i započnite svoju sljedeću avanturu.',
+      ctaSubtitle: 'Pridružite se AudioGuide danas i započnite svoju sljedeću avanturu.',
     },
     play: {
       nextStop: 'Sljedeća stanica',
@@ -1415,7 +1532,7 @@ const translations = {
       step3: 'Uronite u iskustvo',
       step3Desc: 'Slušajte fascinantne priče i činjenice tačno kada vam zatrebaju.',
       ctaTitle: 'Spremni za istraživanje?',
-      ctaSubtitle: 'Pridružite se AudioTour danas i započnite svoju sljedeću avanturu.',
+      ctaSubtitle: 'Pridružite se AudioGuide danas i započnite svoju sljedeću avanturu.',
     },
     play: {
       nextStop: 'Sljedeća stanica',

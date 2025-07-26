@@ -35,19 +35,19 @@ const AppSettings = () => {
   const { settings: contextSettings, updateSettings } = useAppSettings();
   const [settings, setSettings] = useState({
     // Branding
-    appName: 'Base44 APP',
+    appName: 'AudioGuide',
     logoUrl: '',
     primaryColor: '#f97316', // Orange
     secondaryColor: '#64748b', // Slate
 
     
     // Company Information
-    companyName: 'TurbaTours',
-    companyDescription: 'Professional Audio Tour Platform',
-    contactEmail: 'info@turbatours.com',
+    companyName: 'AudioGuide',
+    companyDescription: 'Professional Audio Tour Platform by Bloom Travel',
+    contactEmail: 'info@audioguide.com',
     contactPhone: '+1 (555) 123-4567',
     address: '123 Tourism Street, City, Country',
-    website: 'https://turbatours.com',
+    website: 'https://audioguide.com',
     
     // App Configuration
     defaultLanguage: 'English',
@@ -152,19 +152,25 @@ const AppSettings = () => {
     }
   };
 
+  const clearCacheAndReset = () => {
+    if (confirm('This will clear all cached settings and reload the page with AudioGuide branding. Continue?')) {
+      AppSettings.forceResetBranding();
+    }
+  };
+
   const resetToDefaults = () => {
     if (confirm('Are you sure you want to reset all settings to default values?')) {
       setSettings({
-        appName: 'Base44 APP',
+        appName: 'AudioGuide',
         logoUrl: '',
         primaryColor: '#3b82f6', // Blue for primary actions
         secondaryColor: '#6b7280', // Neutral gray for secondary elements
-        companyName: 'TurbaTours',
-        companyDescription: 'Professional Audio Tour Platform',
-        contactEmail: 'info@turbatours.com',
+        companyName: 'AudioGuide',
+        companyDescription: 'Professional Audio Tour Platform by Bloom Travel',
+        contactEmail: 'info@audioguide.com',
         contactPhone: '+1 (555) 123-4567',
         address: '123 Tourism Street, City, Country',
-        website: 'https://turbatours.com',
+        website: 'https://audioguide.com',
         defaultLanguage: 'English',
         enableRegistration: true,
         enableGuestMode: false,
@@ -790,6 +796,15 @@ const AppSettings = () => {
           >
             <RefreshCw className="h-4 w-4" />
             Reset to Defaults
+          </Button>
+          
+          <Button
+            variant="destructive"
+            onClick={clearCacheAndReset}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Clear Cache & Reset Branding
           </Button>
           
           <Button

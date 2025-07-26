@@ -82,13 +82,13 @@ export const isFeatureEnabled = (feature) => {
 export const getBrandingInfo = () => {
   const settings = getAppSettings();
   return {
-    appName: settings.appName || 'Base44 APP',
-    companyName: settings.companyName || 'TurbaTours',
+    appName: settings.appName || 'AudioGuide',
+    companyName: settings.companyName || 'AudioGuide',
     logoUrl: settings.logoUrl || '',
     description: settings.companyDescription || 'Professional Audio Tour Platform',
-    contactEmail: settings.contactEmail || 'info@turbatours.com',
+    contactEmail: settings.contactEmail || 'info@audioguide.com',
     contactPhone: settings.contactPhone || '+1 (555) 123-4567',
-    website: settings.website || 'https://turbatours.com',
+    website: settings.website || 'https://audioguide.com',
     address: settings.address || '123 Tourism Street, City, Country'
   };
 };

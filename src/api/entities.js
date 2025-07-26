@@ -1110,7 +1110,7 @@ export const User = {
 
       // Clear any local storage items related to authentication
       localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('audiotour_user');
+      sessionStorage.removeItem('audioguide_user');
 
       return { success: true };
     } catch (error) {
@@ -1690,16 +1690,16 @@ export const AppSettings = {
       
       // Return default settings if none found
       return {
-        appName: 'Base44 APP',
+        appName: 'AudioGuide',
         logoUrl: '',
         primaryColor: '#3b82f6', // Clean blue for buttons and links
         secondaryColor: '#64748b', // Neutral gray for secondary elements
-        companyName: 'TurbaTours',
-        companyDescription: 'Professional Audio Tour Platform',
-        contactEmail: 'info@turbatours.com',
+        companyName: 'AudioGuide',
+        companyDescription: 'Professional Audio Tour Platform by Bloom Travel',
+        contactEmail: 'info@audioguide.com',
         contactPhone: '+1 (555) 123-4567',
         address: '123 Tourism Street, City, Country',
-        website: 'https://turbatours.com',
+        website: 'https://audioguide.com',
         defaultLanguage: 'English',
         enableRegistration: true,
         enableGuestMode: false,
@@ -1762,6 +1762,23 @@ export const AppSettings = {
     } catch (error) {
       console.error('Error resetting to defaults:', error);
       return { success: false, error: error.message };
+    }
+  },
+
+  forceResetBranding: () => {
+    try {
+      // Clear all cached settings
+      localStorage.removeItem('appSettings');
+      sessionStorage.removeItem('appSettings');
+      
+      // Force reload the page to clear any in-memory cached values
+      console.log('Clearing cached app settings and forcing reload...');
+      window.location.reload();
+      
+      return true;
+    } catch (error) {
+      console.error('Error forcing reset:', error);
+      return false;
     }
   },
 
@@ -1938,5 +1955,77 @@ export const AppSettings = {
       console.error('Error applying app settings:', error);
       return false;
     }
+  }
+};
+// TourSignup entity - for managing tourist signups to public tours
+export const TourSignup = {
+  get: async (id) => {
+    const response = await supabase.from('tour_signups').select('*').eq('id', id).single();
+    return handleResponse(response);
+  },
+
+  list: async () => {
+    const response = await supabase.from('tour_signups').select('*');
+    return handleResponse(response);
+  },
+
+  filter: async (filters = {}, sortBy = 'created_at', limit = 100) => {
+    let query = supabase.from('tour_signups').select('*');
+
+    // Apply filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (typeof value === 'object' && value.$in) {
+        query = query.in(key, value.$in);
+      } else {
+        query = query.eq(key, value);
+      }
+    });
+
+    // Apply sorting
+    if (sortBy && sortBy.startsWith('-')) {
+      query = query.order(sortBy.substring(1), { ascending: false });
+    } else if (sortBy) {
+      query = query.order(sortBy, { ascending: true });
+    }
+
+    query = query.limit(limit);
+
+    const response = await query;
+    return handleResponse(response);
+  },
+
+  create: async (data) => {
+    const response = await supabase.from('tour_signups').insert([data]).select().single();
+    return handleResponse(response);
+  },
+
+  update: async (id, data) => {
+    const response = await supabase.from('tour_signups').update(data).eq('id', id).select().single();
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await supabase.from('tour_signups').delete().eq('id', id);
+    return handleResponse(response);
+  },
+
+  // Get signups for a specific tour
+  getByTour: async (tourId) => {
+    const response = await supabase
+      .from('tour_signups')
+      .select('*')
+      .eq('tour_id', tourId)
+      .order('created_at', { ascending: false });
+    return handleResponse(response);
+  },
+
+  // Get signups by email
+  getByEmail: async (email) => {
+    const response = await supabase
+      .from('tour_signups')
+      .select('*')
+      .eq('email', email)
+      .order('created_at', { ascending: false });
+    return handleResponse(response);
   }
 };

@@ -1,8 +1,8 @@
-# TurbaTours Color Palette
+# AudioGuide Color Palette
 
 ## Brand Colors
 
-### Primary Color (TurbaTours Blue)
+### Primary Color (AudioGuide Blue)
 **Purpose**: Core brand identity, primary interactive elements (buttons, links, active states), main highlights.
 
 - **Base**: `hsl(198 100% 47%)` → `#0095ef` → `rgb(0, 149, 239)`

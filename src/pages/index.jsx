@@ -44,6 +44,8 @@ import DriverHistory from "./DriverHistory";
 
 import LiveBroadcastTest from "./LiveBroadcastTest";
 
+import AuthCallback from "./AuthCallback";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -91,6 +93,8 @@ const PAGES = {
     DriverHistory: DriverHistory,
     
     LiveBroadcastTest: LiveBroadcastTest,
+    
+    AuthCallback: AuthCallback,
     
 }
 
@@ -162,6 +166,8 @@ function PagesContent() {
                 <Route path="/driverhistory" element={<DriverHistory />} />
                 
                 <Route path="/livebroadcasttest" element={<LiveBroadcastTest />} />
+                
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 
             </Routes>
         </Layout>
