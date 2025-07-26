@@ -67,6 +67,7 @@ import {
   Radio,
   Mic,
   Loader2,
+  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -390,6 +391,15 @@ export default function AdminDashboard() {
 
       const assignmentsData = await TourAssignment.filter({}, '-created_at', 1000) || [];
       const userProgressData = await UserProgress.filter({}, '-created_at', 1000) || [];
+      
+      // Load bookings data
+      let bookingsData = [];
+      try {
+        const { TourBooking } = await import('@/api/entities');
+        bookingsData = await TourBooking.filter({}, '-created_at', 1000) || [];
+      } catch (error) {
+        console.error("Error loading bookings:", error);
+      }
 
       setUsers(usersData);
       setTours(toursData);
@@ -423,7 +433,7 @@ export default function AdminDashboard() {
       const touristUsers = usersData.filter(user => (user.user_group || []).includes("Tourist"));
       setTourists(touristUsers);
 
-      setBookings([]); // Placeholder for bookings
+      setBookings(bookingsData);
 
     } catch (err) {
       console.error("Critical error in loadDashboardData:", err);
@@ -852,9 +862,7 @@ export default function AdminDashboard() {
           </FeatureGate>
           <TabsTrigger value="users">{t('admin.tabs.users')}</TabsTrigger>
           <TabsTrigger value="tours">{t('admin.tabs.tours')}</TabsTrigger>
-          <TabsTrigger value="tourists">{t('admin.tabs.tourists')}</TabsTrigger>
           <TabsTrigger value="bookings">{t('admin.tabs.bookings')}</TabsTrigger>
-          <TabsTrigger value="crm">CRM & Signups</TabsTrigger>
           <TabsTrigger value="activity_log">{t('admin.tabs.activityLog')}</TabsTrigger>
           <TabsTrigger value="system_errors">{t('admin.tabs.systemErrors')}</TabsTrigger>
           <TabsTrigger value="app_settings">{t('admin.tabs.appSettings')}</TabsTrigger>
@@ -862,6 +870,7 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="overview">
+          {/* Primary KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardContent className="pt-6">
@@ -869,6 +878,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-500">{t('admin.stats.totalUsers')}</p>
                     <h3 className="text-2xl font-bold mt-1">{stats.totalUsers}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {stats.activeUsers} active this week
+                    </p>
                   </div>
                   <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <Users className="h-6 w-6 text-blue-600" />
@@ -882,6 +894,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-500">{t('admin.stats.totalTours')}</p>
                     <h3 className="text-2xl font-bold mt-1">{stats.totalTours}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {assignments.filter(a => a.status === 'in_progress').length} currently active
+                    </p>
                   </div>
                   <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center">
                     <MapIcon className="h-6 w-6 text-indigo-600" />
@@ -893,8 +908,81 @@ export default function AdminDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">{t('admin.stats.activeUsers')}</p>
-                    <h3 className="text-2xl font-bold mt-1">{stats.activeUsers}</h3>
+                    <p className="text-sm font-medium text-gray-500">Total Bookings</p>
+                    <h3 className="text-2xl font-bold mt-1">{bookings.length}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {bookings.filter(b => b.status === 'confirmed').length} confirmed
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Calendar className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Revenue</p>
+                    <h3 className="text-2xl font-bold mt-1">
+                      ${bookings.reduce((sum, b) => sum + (b.total_price || 0), 0).toLocaleString()}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {bookings.filter(b => b.status === 'confirmed').length} paid bookings
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-amber-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Secondary KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Active Drivers</p>
+                    <h3 className="text-2xl font-bold mt-1">{drivers.length}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {assignments.filter(a => a.status === 'in_progress').length} on tours
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <UserIcon className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Completed Tours</p>
+                    <h3 className="text-2xl font-bold mt-1">{stats.completedTours}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {assignments.filter(a => a.status === 'assigned').length} scheduled
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-teal-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-teal-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">System Health</p>
+                    <h3 className="text-2xl font-bold mt-1 text-green-600">Good</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      All services operational
+                    </p>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                     <Activity className="h-6 w-6 text-green-600" />
@@ -906,16 +994,121 @@ export default function AdminDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">{t('admin.stats.completedTours')}</p>
-                    <h3 className="2xl font-bold mt-1">{stats.completedTours}</h3>
+                    <p className="text-sm font-medium text-gray-500">Live Broadcasts</p>
+                    <h3 className="text-2xl font-bold mt-1">0</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      No active broadcasts
+                    </p>
                   </div>
-                  <div className="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
-                    <Settings className="h-6 w-6 text-amber-600" />
+                  <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <Radio className="h-6 w-6 text-red-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Quick Summary Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  User Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Users</span>
+                    <Badge variant="secondary">{stats.totalUsers}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Active This Week</span>
+                    <Badge variant="default">{stats.activeUsers}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Drivers</span>
+                    <Badge variant="outline">{drivers.length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Tourists</span>
+                    <Badge variant="outline">{tourists.length}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapIcon className="h-5 w-5" />
+                  Tour Operations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Tours</span>
+                    <Badge variant="secondary">{stats.totalTours}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Active Now</span>
+                    <Badge variant="default">{assignments.filter(a => a.status === 'in_progress').length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Scheduled</span>
+                    <Badge variant="outline">{assignments.filter(a => a.status === 'assigned').length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Completed</span>
+                    <Badge variant="outline">{stats.completedTours}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Activity
+              </CardTitle>
+              <CardDescription>Latest system activities and tour updates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {userActivity.slice(0, 5).map((activity, index) => (
+                  <div key={activity.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <UserIcon className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {users.find(u => u.id === activity.user_id)?.full_name || 'Unknown User'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {activity.action || 'Tour activity'} • {tours.find(t => t.id === activity.tour_id)?.title || 'Unknown Tour'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {activity.status || 'active'}
+                    </Badge>
+                  </div>
+                ))}
+                {userActivity.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No recent activity</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="active_tours">
@@ -1504,73 +1697,8 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="tourists">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('admin.tourists.title')}</CardTitle>
-              <CardDescription>{t('admin.tourists.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <Input
-                  placeholder={t('admin.tourists.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
-                />
-              </div>
-              <ScrollArea className="h-[calc(100vh-250px)]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('admin.tourists.table.name')}</TableHead>
-                      <TableHead>{t('admin.tourists.table.email')}</TableHead>
-                      <TableHead>{t('admin.tourists.table.totalTours')}</TableHead>
-                      <TableHead>{t('admin.tourists.table.completedTours')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTourists.map((tourist) => (
-                      <TableRow key={tourist.id}>
-                        <TableCell>{tourist.full_name || t('common.notAvailable')}</TableCell>
-                        <TableCell>{tourist.email || t('common.notAvailable')}</TableCell>
-                        <TableCell>{(userActivity.filter(act => act.user_id === tourist.id) || []).length}</TableCell>
-                        <TableCell>{(userActivity.filter(act => act.user_id === tourist.id && act.status === 'completed') || []).length}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="bookings">
           <BookingsManagement />
-        </TabsContent>
-
-        <TabsContent value="crm">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tour Signups</CardTitle>
-                <CardDescription>Manage tourist signups for public tours</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TourSignupsTable />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Tourist Management</CardTitle>
-                <CardDescription>View and manage registered tourists</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TouristManagement tourists={filteredTourists} userActivity={userActivity} />
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
 
         <TabsContent value="activity_log">
