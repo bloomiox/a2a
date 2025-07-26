@@ -46,6 +46,8 @@ import LiveBroadcastTest from "./LiveBroadcastTest";
 
 import AuthCallback from "./AuthCallback";
 
+import TouristDashboard from "./TouristDashboard";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -96,6 +98,8 @@ const PAGES = {
     
     AuthCallback: AuthCallback,
     
+    TouristDashboard: TouristDashboard,
+    
 }
 
 function _getCurrentPage(url) {
@@ -141,7 +145,7 @@ function PagesContent() {
                 
                 <Route path="/admindashboard" element={<AdminDashboard />} />
                 
-                <Route path="/TourDetails" element={<TourDetails />} />
+                <Route path="/tourdetails" element={<TourDetails />} />
                 
                 <Route path="/Landing" element={<Landing />} />
                 
@@ -168,6 +172,8 @@ function PagesContent() {
                 <Route path="/livebroadcasttest" element={<LiveBroadcastTest />} />
                 
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                
+                <Route path="/touristdashboard" element={<TouristDashboard />} />
                 
             </Routes>
         </Layout>

@@ -84,6 +84,7 @@ export default function Layout({ children, currentPageName }) {
   const isExploreOrSearchPage = ["Explore", "Search"].includes(currentPageName);
   const isAuthPage = ["Login", "Register"].includes(currentPageName);
   const isPlayPage = currentPageName === "Play";
+  const isTourDetailsPage = currentPageName === "TourDetails";
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -106,11 +107,23 @@ export default function Layout({ children, currentPageName }) {
           }
         }
       } catch (error) {
+        console.log('Authentication failed, user not logged in');
         setIsLoggedIn(false);
         // If not logged in and trying to access protected routes, redirect to landing
-        // Allow access to Landing, Login, Register, Explore, and Search pages without authentication
-        if (!isLandingPage && !isExploreOrSearchPage && !isAuthPage) {
+        // Allow access to Landing, Login, Register, Explore, Search, TourDetails, and Play pages without authentication
+        console.log('Page access check:', {
+          currentPageName,
+          isLandingPage,
+          isExploreOrSearchPage,
+          isAuthPage,
+          isTourDetailsPage,
+          isPlayPage
+        });
+        if (!isLandingPage && !isExploreOrSearchPage && !isAuthPage && !isTourDetailsPage && !isPlayPage) {
+          console.log('Redirecting to landing page');
           navigate(createPageUrl("Landing"));
+        } else {
+          console.log('Allowing guest access to page:', currentPageName);
         }
       } finally {
         setLoading(false);
@@ -159,6 +172,7 @@ export default function Layout({ children, currentPageName }) {
         isLoggedIn={isLoggedIn}
         isExploreOrSearchPage={isExploreOrSearchPage}
         isPlayPage={isPlayPage}
+        isTourDetailsPage={isTourDetailsPage}
         navigate={navigate}
         currentPageName={currentPageName}
         handleLogout={handleLogout}
@@ -178,6 +192,7 @@ function LayoutContent({
   isLoggedIn, 
   isExploreOrSearchPage, 
   isPlayPage, 
+  isTourDetailsPage,
   navigate, 
   currentPageName, 
   handleLogout, 
@@ -186,7 +201,7 @@ function LayoutContent({
   user, 
   children 
 }) {
-  if (isLandingPage || isAuthPage || (!isLoggedIn && (isExploreOrSearchPage || isPlayPage))) {
+  if (isLandingPage || isAuthPage || (!isLoggedIn && (isExploreOrSearchPage || isPlayPage || isTourDetailsPage))) {
     return (
       <SimpleLayout
         isLoggedIn={isLoggedIn}
@@ -350,8 +365,8 @@ function MainLayout({ currentPageName, handleLogout, children, showDriverNav, sh
     tourist: [
       { page: "Home", label: t('nav.home'), icon: Home },
       { page: "Explore", label: t('nav.explore'), icon: Compass },
+      { page: "TouristDashboard", label: t('booking.myBookings'), icon: BookUser },
       { page: "Create", label: t('nav.createTour'), icon: Plus, isCentral: true },
-      { page: "CreatorDashboard", label: t('nav.analytics'), icon: BarChart3 },
       { page: "Profile", label: t('nav.profile'), icon: UserIcon },
     ],
     driver: [

@@ -21,8 +21,7 @@ import {
   Clock,
   Calendar,
   DollarSign,
-  UserPlus,
-  Loader2,
+
   Menu,
   X,
   Phone,
@@ -39,24 +38,14 @@ import {
   CheckCircle
 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
-import { Tour, TourSignup } from "@/api/entities";
-import { toast } from "@/components/ui/use-toast";
+import { Tour } from "@/api/entities";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [publicTours, setPublicTours] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTour, setSelectedTour] = useState(null);
-  const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [signupForm, setSignupForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
-  const [submitting, setSubmitting] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -86,9 +75,10 @@ export default function Landing() {
     navigate(createPageUrl("Register"));
   };
 
-  const handleTourSignup = (tour) => {
-    setSelectedTour(tour);
-    setShowSignupDialog(true);
+  const handleTourClick = (tour) => {
+    const url = `${createPageUrl('TourDetails')}?id=${tour.id}`;
+    console.log('Navigating to:', url);
+    navigate(url);
   };
 
   const scrollToSection = (sectionId) => {
@@ -109,42 +99,7 @@ export default function Landing() {
     setContactForm({ name: '', email: '', subject: '', message: '' });
   };
 
-  const handleSignupSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedTour) return;
 
-    try {
-      setSubmitting(true);
-
-      await TourSignup.create({
-        tour_id: selectedTour.id,
-        name: signupForm.name,
-        email: signupForm.email,
-        phone: signupForm.phone,
-        message: signupForm.message,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
-
-      toast({
-        title: "Signup Successful!",
-        description: "We'll contact you soon with tour details.",
-      });
-
-      setShowSignupDialog(false);
-      setSignupForm({ name: '', email: '', phone: '', message: '' });
-      setSelectedTour(null);
-    } catch (error) {
-      console.error('Error submitting signup:', error);
-      toast({
-        title: "Signup Failed",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const features = [
     {
@@ -476,12 +431,13 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden cursor-pointer"
+                  onClick={() => handleTourClick(tour)}
                 >
                   <div className="h-48 bg-gradient-to-br from-indigo-500 to-purple-600 relative">
-                    {tour.preview_image_url ? (
+                    {tour.preview_image ? (
                       <img
-                        src={tour.preview_image_url}
+                        src={tour.preview_image}
                         alt={tour.title}
                         className="w-full h-full object-cover"
                       />
@@ -508,26 +464,35 @@ export default function Landing() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-500">
                         <MapPin className="h-4 w-4 mr-2" />
-                        {tour.city}, {tour.country}
+                        {tour.location?.city || 'Unknown'}, {tour.location?.country || 'Location'}
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Clock className="h-4 w-4 mr-2" />
-                        {tour.estimated_duration || 60} minutes
+                        {tour.duration ? `${Math.floor(tour.duration / 60)}h ${tour.duration % 60}m` : '1 hour'}
                       </div>
-                      {tour.price_per_tourist && (
+                      {tour.financials?.price_per_tourist > 0 && (
                         <div className="flex items-center text-sm text-gray-500">
                           <DollarSign className="h-4 w-4 mr-2" />
-                          ${tour.price_per_tourist} per person
+                          ${tour.financials.price_per_tourist} per person
+                        </div>
+                      )}
+                      {(!tour.financials?.price_per_tourist || tour.financials.price_per_tourist === 0) && (
+                        <div className="flex items-center text-sm text-green-600 font-medium">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          {t('booking.freeTour')}
                         </div>
                       )}
                     </div>
 
                     <Button
-                      onClick={() => handleTourSignup(tour)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent card click when button is clicked
+                        handleTourClick(tour);
+                      }}
                       className="w-full bg-indigo-600 hover:bg-indigo-700"
                     >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Sign Up for Tour
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      {t('booking.viewDetails')}
                     </Button>
                   </div>
                 </motion.div>
@@ -835,86 +800,7 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* Tour Signup Dialog */}
-      <Dialog open={showSignupDialog} onOpenChange={setShowSignupDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Sign Up for Tour</DialogTitle>
-            <DialogDescription>
-              {selectedTour && (
-                <>Join "{selectedTour.title}" and we'll contact you with details.</>
-              )}
-            </DialogDescription>
-          </DialogHeader>
 
-          <form onSubmit={handleSignupSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                value={signupForm.name}
-                onChange={(e) => setSignupForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={signupForm.email}
-                onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={signupForm.phone}
-                onChange={(e) => setSignupForm(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="message">Message (Optional)</Label>
-              <Input
-                id="message"
-                value={signupForm.message}
-                onChange={(e) => setSignupForm(prev => ({ ...prev, message: e.target.value }))}
-                placeholder="Any special requests or questions?"
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowSignupDialog(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Signing Up...
-                  </>
-                ) : (
-                  'Sign Up'
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

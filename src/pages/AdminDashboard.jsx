@@ -77,6 +77,7 @@ import LiveAudioBroadcast from '../components/admin/LiveAudioBroadcast';
 import AdminAnalytics from '../components/admin/AdminAnalytics';
 import SystemLogs from '../components/admin/SystemLogs';
 import AppSettings from '../components/admin/AppSettings';
+import BookingsManagement from '../components/admin/BookingsManagement';
 import BroadcastDebugPanel from '../components/debug/BroadcastDebugPanel';
 import { useLanguage } from '@/components/i18n/LanguageContext';
 import { DriverLocation } from "@/api/entities";
@@ -852,6 +853,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="users">{t('admin.tabs.users')}</TabsTrigger>
           <TabsTrigger value="tours">{t('admin.tabs.tours')}</TabsTrigger>
           <TabsTrigger value="tourists">{t('admin.tabs.tourists')}</TabsTrigger>
+          <TabsTrigger value="bookings">{t('admin.tabs.bookings')}</TabsTrigger>
           <TabsTrigger value="crm">CRM & Signups</TabsTrigger>
           <TabsTrigger value="activity_log">{t('admin.tabs.activityLog')}</TabsTrigger>
           <TabsTrigger value="system_errors">{t('admin.tabs.systemErrors')}</TabsTrigger>
@@ -1541,6 +1543,10 @@ export default function AdminDashboard() {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bookings">
+          <BookingsManagement />
         </TabsContent>
 
         <TabsContent value="crm">

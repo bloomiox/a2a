@@ -21,12 +21,94 @@ export default function AuthCallback() {
         const type = searchParams.get('type');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
+        const loginToken = searchParams.get('token');
+        const redirectTo = searchParams.get('redirect');
 
         // Handle error from URL params
         if (error) {
           console.error('Auth callback error:', error, errorDescription);
           setStatus('error');
           setMessage(errorDescription || error);
+          return;
+        }
+
+        // Handle login token from email
+        if (loginToken) {
+          console.log('Processing login token...');
+          
+          // Import NotificationService dynamically to avoid circular imports
+          const { default: NotificationService } = await import('@/services/NotificationService');
+          const tokenResult = NotificationService.verifyLoginToken(loginToken);
+          
+          if (!tokenResult.valid) {
+            console.error('Invalid login token:', tokenResult.error);
+            setStatus('error');
+            setMessage(tokenResult.error || 'Invalid or expired login link');
+            return;
+          }
+
+          // Get user data and create session
+          const { User, TourBooking } = await import('@/api/entities');
+          
+          let user;
+          if (tokenResult.userId === 'guest' && tokenResult.storageKey) {
+            // This is a guest booking - get booking data from localStorage
+            try {
+              const bookingDataStr = localStorage.getItem(tokenResult.storageKey);
+              if (!bookingDataStr) {
+                setStatus('error');
+                setMessage('Booking data not found. Please try booking again.');
+                return;
+              }
+
+              const bookingData = JSON.parse(bookingDataStr);
+
+              // Create user account
+              user = await User.create({
+                email: bookingData.contact_email,
+                full_name: bookingData.contact_name,
+                phone: bookingData.contact_phone,
+                role: 'tourist',
+                is_active: true,
+                created_via_booking: true
+              });
+
+              // Clean up localStorage
+              localStorage.removeItem(tokenResult.storageKey);
+              
+              console.log('Created user account for guest booking:', user.id);
+            } catch (error) {
+              console.error('Error creating user from guest booking:', error);
+              setStatus('error');
+              setMessage('Failed to create user account');
+              return;
+            }
+          } else {
+            user = await User.get(tokenResult.userId);
+            if (!user) {
+              setStatus('error');
+              setMessage('User account not found');
+              return;
+            }
+          }
+
+          // Create a simple session (in a real app, you'd use proper authentication)
+          localStorage.setItem('user_session', JSON.stringify({
+            user_id: user.id,
+            email: user.email,
+            full_name: user.full_name,
+            role: user.role,
+            authenticated_at: Date.now()
+          }));
+
+          setStatus('success');
+          setMessage('Successfully logged in! Redirecting to your dashboard...');
+          
+          // Redirect to the specified page or tourist dashboard
+          setTimeout(() => {
+            navigate(createPageUrl(redirectTo || 'TouristDashboard'));
+          }, 2000);
+          
           return;
         }
 

@@ -328,8 +328,6 @@ export default function DriverNavigation() {
                         </CardContent>
                     </Card>
 
-                    {driver && <LiveAudioReceiver driverId={driver.id} tourId={tourId} isVisible={true} />}
-
                     {tourCompleted ? (
                         <Card className="bg-green-50 border-green-200 text-center p-8">
                              <CardHeader>
@@ -361,32 +359,44 @@ export default function DriverNavigation() {
                             </CardContent>
                         </Card>
                     ) : (
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <MapPin className="h-5 w-5 text-primary" />
-                                    <CardTitle>{t('driver.navigation.currentStop')}: {viewedStop?.title}</CardTitle>
-                                </div>
-                                <CardDescription>{viewedStop?.description}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <DriverAudioController audioTrack={currentAudioTrack} transcript={currentAudioTrack?.transcript} />
-                                <div className="flex items-center justify-between mt-4 gap-4">
-                                    <Button onClick={handlePreviousStop} size="lg" variant="outline" className="flex-1" disabled={viewedStopIndex === 0}>
-                                        <SkipBack className="mr-2 h-5 w-5" /> {t('driver.navigation.previousStop')}
-                                    </Button>
-                                    {viewedStopIndex === stops.length - 1 ? (
-                                        <Button onClick={handleNextStop} size="lg" className="flex-1 bg-green-600 hover:bg-green-700">
-                                            {t('driver.navigation.finishTour')} <Flag className="ml-2 h-5 w-5" />
+                        <>
+                            {/* Navigation Controls - Moved to top for easier access */}
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <Button onClick={handlePreviousStop} size="lg" variant="outline" className="flex-1" disabled={viewedStopIndex === 0}>
+                                            <SkipBack className="mr-2 h-5 w-5" /> {t('driver.navigation.previousStop')}
                                         </Button>
-                                    ) : (
-                                        <Button onClick={handleNextStop} size="lg" className="flex-1">
-                                            {t('driver.navigation.nextStop')} <SkipForward className="ml-2 h-5 w-5" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                                        {viewedStopIndex === stops.length - 1 ? (
+                                            <Button onClick={handleNextStop} size="lg" className="flex-1 bg-green-600 hover:bg-green-700">
+                                                {t('driver.navigation.finishTour')} <Flag className="ml-2 h-5 w-5" />
+                                            </Button>
+                                        ) : (
+                                            <Button onClick={handleNextStop} size="lg" className="flex-1">
+                                                {t('driver.navigation.nextStop')} <SkipForward className="ml-2 h-5 w-5" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Current Stop Information */}
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-primary" />
+                                        <CardTitle>{t('driver.navigation.currentStop')}: {viewedStop?.title}</CardTitle>
+                                    </div>
+                                    <CardDescription>{viewedStop?.description}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <DriverAudioController audioTrack={currentAudioTrack} transcript={currentAudioTrack?.transcript} />
+                                </CardContent>
+                            </Card>
+
+                            {/* Live Broadcast Audio - Moved below Current Stop */}
+                            {driver && <LiveAudioReceiver driverId={driver.id} tourId={tourId} isVisible={true} />}
+                        </>
                     )}
                 </div>
             </ScrollArea>

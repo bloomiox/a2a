@@ -38,7 +38,9 @@ const translations = {
       "stops": "stops",
       "language": "Language",
       "tryAgain": "Try Again",
-      "error": "Error"
+      "error": "Error",
+      "bookTour": "Book Tour",
+      "startTour": "Start Tour"
     },
     "nav": {
       "home": "Home",
@@ -144,7 +146,8 @@ const translations = {
         "tourists": "Tourists",
         "activityLog": "Activity Log",
         "systemErrors": "System Errors",
-        "appSettings": "App Settings"
+        "appSettings": "App Settings",
+        "bookings": "Bookings"
       },
       "stats": {
         "totalUsers": "Total Users",
@@ -517,6 +520,47 @@ const translations = {
         stopsCompleted: "stops completed",
         completedAt: "Completed"
       }
+    },
+    booking: {
+      bookTour: "Book This Tour",
+      selectDate: "Select Date",
+      selectTime: "Select Time",
+      numberOfTourists: "Number of Tourists",
+      contactName: "Contact Name",
+      contactEmail: "Email",
+      contactPhone: "Phone Number",
+      specialRequests: "Special Requests",
+      preferredLanguage: "Preferred Language",
+      bookingDetails: "Booking Details",
+      paymentDetails: "Payment Details",
+      bookingConfirmed: "Booking Confirmed!",
+      bookingReference: "Booking Reference",
+      confirmationEmail: "A confirmation email has been sent",
+      totalPrice: "Total Price",
+      cardNumber: "Card Number",
+      expiryDate: "Expiry Date",
+      cvv: "CVV",
+      cardholderName: "Cardholder Name",
+      payNow: "Pay Now",
+      confirmBooking: "Confirm Booking",
+      bookingFailed: "Booking failed. Please try again.",
+      myBookings: "My Bookings",
+      upcomingTours: "Upcoming Tours",
+      pastTours: "Past Tours",
+      pendingPayment: "Pending Payment",
+      cancelledBookings: "Cancelled Bookings",
+      cancelBooking: "Cancel Booking",
+      viewTour: "View Tour",
+      noUpcomingTours: "No Upcoming Tours",
+      noPastTours: "No Past Tours",
+      bookingCancelled: "Booking Cancelled",
+      freeCancellation: "Free cancellation up to 24 hours before the tour",
+      viewDetails: "View Details",
+      previewTour: "Preview Tour",
+      startTourNow: "Start Tour Now",
+      loginToBook: "Login to Book",
+      viewMyBookings: "View My Bookings",
+      freeTour: "Free Tour"
     }
   },
   bs: {
@@ -676,7 +720,8 @@ const translations = {
         tourists: "Turisti",
         activityLog: "Dnevnik Aktivnosti",
         systemErrors: "Sistemske Greške",
-        appSettings: "Postavke Aplikacije"
+        appSettings: "Postavke Aplikacije",
+        bookings: "Rezervacije"
       },
       stats: {
         totalUsers: "Ukupno Korisnika",
@@ -1029,6 +1074,47 @@ const translations = {
         stopsCompleted: "stanica završeno",
         completedAt: "Završeno"
       }
+    },
+    booking: {
+      bookTour: "Rezerviši turu",
+      selectDate: "Odaberi datum",
+      selectTime: "Odaberi vrijeme",
+      numberOfTourists: "Broj turista",
+      contactName: "Ime kontakta",
+      contactEmail: "Email",
+      contactPhone: "Broj telefona",
+      specialRequests: "Posebni zahtjevi",
+      preferredLanguage: "Željeni jezik",
+      bookingDetails: "Detalji rezervacije",
+      paymentDetails: "Detalji plaćanja",
+      bookingConfirmed: "Rezervacija potvrđena!",
+      bookingReference: "Referenca rezervacije",
+      confirmationEmail: "Email potvrda je poslana",
+      totalPrice: "Ukupna cijena",
+      cardNumber: "Broj kartice",
+      expiryDate: "Datum isteka",
+      cvv: "CVV",
+      cardholderName: "Ime vlasnika kartice",
+      payNow: "Plati sada",
+      confirmBooking: "Potvrdi rezervaciju",
+      bookingFailed: "Rezervacija neuspješna. Molimo pokušajte ponovo.",
+      myBookings: "Moje rezervacije",
+      upcomingTours: "Nadolazeće ture",
+      pastTours: "Prošle ture",
+      pendingPayment: "Čeka plaćanje",
+      cancelledBookings: "Otkazane rezervacije",
+      cancelBooking: "Otkaži rezervaciju",
+      viewTour: "Pogledaj turu",
+      noUpcomingTours: "Nema nadolazećih tura",
+      noPastTours: "Nema prošlih tura",
+      bookingCancelled: "Rezervacija otkazana",
+      freeCancellation: "Besplatno otkazivanje do 24 sata prije ture",
+      viewDetails: "Pogledaj detalje",
+      previewTour: "Pregled ture",
+      startTourNow: "Započni turu sada",
+      loginToBook: "Prijavite se za rezervaciju",
+      viewMyBookings: "Pogledaj moje rezervacije",
+      freeTour: "Besplatna tura"
     },
     transport: {
       walking: "Pješačenje",

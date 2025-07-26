@@ -656,6 +656,214 @@ export const AudioChunk = {
   delete: async () => ({ success: true })
 };
 
+// TourBooking entity
+export const TourBooking = {
+  get: async (id) => {
+    const response = await supabase.from('tour_bookings').select('*').eq('id', id).single();
+    return handleResponse(response);
+  },
+
+  list: async () => {
+    const response = await supabase.from('tour_bookings').select('*');
+    return handleResponse(response);
+  },
+
+  filter: async (filters = {}, sortBy = 'created_at', limit = 100) => {
+    let query = supabase.from('tour_bookings').select('*');
+
+    // Apply filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (typeof value === 'object' && value.$in) {
+        query = query.in(key, value.$in);
+      } else {
+        query = query.eq(key, value);
+      }
+    });
+
+    // Apply sorting
+    if (sortBy && sortBy.startsWith('-')) {
+      query = query.order(sortBy.substring(1), { ascending: false });
+    } else if (sortBy) {
+      query = query.order(sortBy, { ascending: true });
+    }
+
+    // Apply limit
+    query = query.limit(limit);
+
+    const response = await query;
+    return handleResponse(response);
+  },
+
+  create: async (data) => {
+    try {
+      console.log('TourBooking.create called with data:', data);
+
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Prepare booking data
+      const bookingData = {
+        ...data,
+        status: data.status || 'pending'
+      };
+
+      // If user is authenticated, use their ID
+      if (user) {
+        bookingData.user_id = user.id;
+      } else {
+        // For guest bookings, set user_id to null and ensure contact info is present
+        bookingData.user_id = null;
+        if (!data.contact_email || !data.contact_name) {
+          throw new Error('Contact information is required for guest bookings');
+        }
+      }
+
+      // Try to insert the booking
+      const response = await supabase.from('tour_bookings').insert([bookingData]).select().single();
+      
+      if (response.error) {
+        console.error('Booking creation error:', response.error);
+        // If it's an RLS error and this is a guest booking, provide a helpful message
+        if (response.error.message.includes('row-level security') && !user) {
+          throw new Error('Guest bookings are not currently enabled. Please create an account first.');
+        }
+        throw response.error;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error in TourBooking.create:', error);
+      throw error;
+    }
+  },
+
+  // Create guest booking without authentication
+  createGuestBooking: async (data) => {
+    try {
+      console.log('Creating guest booking:', data);
+      
+      // Generate booking ID and reference
+      const bookingId = crypto.randomUUID();
+      const bookingRef = 'BK' + bookingId.slice(0, 8).toUpperCase();
+      
+      // Prepare booking data with generated fields
+      const bookingData = {
+        id: bookingId,
+        user_id: null, // Guest booking
+        tour_id: data.tour_id,
+        tour_date: data.tour_date,
+        tour_time: data.tour_time,
+        number_of_tourists: data.number_of_tourists,
+        total_price: data.total_price,
+        contact_name: data.contact_name,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone,
+        special_requests: data.special_requests,
+        preferred_language: data.preferred_language,
+        status: data.status || 'pending',
+        booking_reference: bookingRef,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Store guest booking data in localStorage temporarily
+      // This will be processed when the user clicks the email link
+      const guestBookingKey = `guest_booking_${bookingId}`;
+      localStorage.setItem(guestBookingKey, JSON.stringify(bookingData));
+      
+      console.log('Stored guest booking in localStorage:', guestBookingKey);
+      
+      return {
+        id: bookingId,
+        ...bookingData,
+        // Mark this as a guest booking for special handling
+        _isGuestBooking: true,
+        _storageKey: guestBookingKey
+      };
+    } catch (error) {
+      console.error('Error creating guest booking:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, data) => {
+    const response = await supabase.from('tour_bookings').update(data).eq('id', id).select().single();
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await supabase.from('tour_bookings').delete().eq('id', id);
+    return handleResponse(response);
+  }
+};
+
+// Payment entity
+export const Payment = {
+  get: async (id) => {
+    const response = await supabase.from('payments').select('*').eq('id', id).single();
+    return handleResponse(response);
+  },
+
+  list: async () => {
+    const response = await supabase.from('payments').select('*');
+    return handleResponse(response);
+  },
+
+  filter: async (filters = {}, sortBy = 'created_at', limit = 100) => {
+    let query = supabase.from('payments').select('*');
+
+    // Apply filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (typeof value === 'object' && value.$in) {
+        query = query.in(key, value.$in);
+      } else {
+        query = query.eq(key, value);
+      }
+    });
+
+    // Apply sorting
+    if (sortBy && sortBy.startsWith('-') ) {
+      query = query.order(sortBy.substring(1), { ascending: false });
+    } else if (sortBy) {
+      query = query.order(sortBy, { ascending: true });
+    }
+
+    // Apply limit
+    query = query.limit(limit);
+
+    const response = await query;
+    return handleResponse(response);
+  },
+
+  create: async (data) => {
+    try {
+      console.log('Payment.create called with data:', data);
+
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be authenticated to create a payment');
+      }
+
+      const response = await supabase.from('payments').insert([data]).select().single();
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error in Payment.create:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, data) => {
+    const response = await supabase.from('payments').update(data).eq('id', id).select().single();
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await supabase.from('payments').delete().eq('id', id);
+    return handleResponse(response);
+  }
+};
+
 // User Progress entity
 export const UserProgress = {
   get: async (id) => {
@@ -752,6 +960,28 @@ export const UserProgress = {
 export const User = {
   me: async () => {
     try {
+      // First check for session storage (for email login links)
+      const sessionData = localStorage.getItem('user_session');
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          // Check if session is still valid (24 hours)
+          if (Date.now() - session.authenticated_at < 24 * 60 * 60 * 1000) {
+            // Get fresh user data from database
+            const profile = await this.get(session.user_id);
+            if (profile) {
+              return profile;
+            }
+          } else {
+            // Session expired, remove it
+            localStorage.removeItem('user_session');
+          }
+        } catch (sessionError) {
+          console.error('Error parsing session data:', sessionError);
+          localStorage.removeItem('user_session');
+        }
+      }
+
       // Try to get the current user from Supabase Auth
       const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -1368,6 +1598,17 @@ export const User = {
         createData.user_group = Array.isArray(userData.user_group) ? userData.user_group : [userData.user_group];
       }
       if (userData.last_active_at) createData.last_active_at = userData.last_active_at;
+      if (userData.phone) createData.phone = userData.phone;
+      if (userData.is_active !== undefined) createData.is_active = userData.is_active;
+      if (userData.created_via_booking !== undefined) createData.created_via_booking = userData.created_via_booking;
+      
+      // Set additional_info for extra fields
+      const additionalInfo = {};
+      if (userData.phone) additionalInfo.phone = userData.phone;
+      if (userData.full_name) additionalInfo.full_name = userData.full_name;
+      if (Object.keys(additionalInfo).length > 0) {
+        createData.additional_info = additionalInfo;
+      }
 
       console.log('Prepared create data:', createData);
 
