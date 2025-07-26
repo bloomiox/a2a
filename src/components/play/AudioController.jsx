@@ -42,6 +42,7 @@ export default function AudioController({
   const [selectedLanguage, setSelectedLanguage] = useState(userPreferences.language);
   const [audioReady, setAudioReady] = useState(false);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const audioRef = useRef(null);
   const progressUpdateRef = useRef(null);
@@ -68,45 +69,27 @@ export default function AudioController({
   useEffect(() => {
     if (!currentTrack?.audio_url) {
       setAudioReady(false);
-      setError("No audio available for this stop");
+      setError({
+        message: "No audio available",
+        details: "This stop doesn't have any audio files. Audio may need to be uploaded during tour editing."
+      });
       return;
     }
 
     // Validate audio URL format
     const audioUrl = currentTrack.audio_url.trim();
     if (!audioUrl) {
-      setError("Audio URL is empty");
+      setError({
+        message: "Audio URL is empty",
+        details: "The audio file reference is missing. Please check the tour configuration."
+      });
       setAudioReady(false);
       return;
     }
 
-    // Check if URL is accessible
-    const validateAudioUrl = async () => {
-      try {
-        const response = await fetch(audioUrl, { method: 'HEAD' });
-        if (!response.ok) {
-          throw new Error(`Audio file not accessible (${response.status})`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (contentType && !contentType.startsWith('audio/')) {
-          throw new Error(`Invalid content type: ${contentType}`);
-        }
-      } catch (fetchError) {
-        console.error('Audio URL validation failed:', fetchError);
-        setError(`Audio file not accessible: ${fetchError.message}`);
-        setAudioReady(false);
-        return;
-      }
-    };
-
-    // Only validate HTTP URLs, skip blob URLs and data URLs
-    if (audioUrl.startsWith('http')) {
-      validateAudioUrl();
-    }
-
     setError(null);
     setAudioReady(false);
+    setRetryCount(0);
 
     if (audioRef.current) {
       audioRef.current.pause();
@@ -129,7 +112,15 @@ export default function AudioController({
     });
 
     // Set the source after adding event listeners
-    audioRef.current.src = currentTrack.audio_url;
+    try {
+      audioRef.current.src = currentTrack.audio_url;
+    } catch (srcError) {
+      console.error('Error setting audio source:', srcError);
+      setError({
+        message: "Invalid audio source",
+        details: "The audio file URL is not valid or accessible."
+      });
+    }
 
     return () => {
       if (audioRef.current) {
@@ -172,28 +163,34 @@ export default function AudioController({
     console.error('Audio error:', e);
     console.error('Audio URL that failed:', currentTrack?.audio_url);
     
-    let errorMessage = "Failed to load audio";
+    let errorMessage = "Audio not available";
+    let userFriendlyMessage = "This audio file may not have been uploaded properly during tour creation.";
     
     if (e.target?.error) {
       switch (e.target.error.code) {
         case 1: // MEDIA_ERR_ABORTED
-          errorMessage = "Audio loading was aborted";
+          errorMessage = "Audio loading was cancelled";
+          userFriendlyMessage = "Audio loading was interrupted. Please try again.";
           break;
         case 2: // MEDIA_ERR_NETWORK
-          errorMessage = "Network error while loading audio";
+          errorMessage = "Network error";
+          userFriendlyMessage = "Check your internet connection and try again.";
           break;
         case 3: // MEDIA_ERR_DECODE
-          errorMessage = "Audio file is corrupted or invalid format";
+          errorMessage = "Invalid audio file";
+          userFriendlyMessage = "The audio file appears to be corrupted or in an unsupported format.";
           break;
         case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-          errorMessage = "Audio file not found or format not supported";
+          errorMessage = "Audio file not accessible";
+          userFriendlyMessage = "The audio file may not have been uploaded properly or is not accessible.";
           break;
         default:
-          errorMessage = `Audio error (code: ${e.target.error.code})`;
+          errorMessage = "Audio playback error";
+          userFriendlyMessage = "There was an issue playing this audio file.";
       }
     }
     
-    setError(errorMessage);
+    setError({ message: errorMessage, details: userFriendlyMessage });
     setAudioReady(false);
     setIsPlaying(false);
   };
@@ -283,6 +280,26 @@ export default function AudioController({
     }
   };
 
+  const retryAudio = () => {
+    if (retryCount < 3 && currentTrack?.audio_url) {
+      console.log(`Retrying audio load (attempt ${retryCount + 1})`);
+      setRetryCount(prev => prev + 1);
+      setError(null);
+      setAudioReady(false);
+      
+      // Recreate the audio element
+      if (audioRef.current) {
+        audioRef.current.src = '';
+        audioRef.current.load();
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.src = currentTrack.audio_url;
+          }
+        }, 1000);
+      }
+    }
+  };
+
   if (!currentStop) {
     return (
       <Card className={`${className}`}>
@@ -324,11 +341,34 @@ export default function AudioController({
 
         {/* Error Display */}
         {error && (
-          <div className="text-center p-3 bg-red-50 text-red-700 rounded-lg text-sm space-y-2">
-            <div>{error}</div>
-            {currentTrack?.audio_url && (
-              <div className="text-xs text-gray-600">
-                <div>URL: {currentTrack.audio_url.substring(0, 100)}...</div>
+          <div className="text-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm space-y-3">
+            <div className="font-medium">
+              {typeof error === 'string' ? error : error.message}
+            </div>
+            {typeof error === 'object' && error.details && (
+              <div className="text-xs text-red-600">
+                {error.details}
+              </div>
+            )}
+            <div className="text-xs text-gray-600 bg-white p-2 rounded border">
+              <div className="font-medium mb-1">Troubleshooting:</div>
+              <ul className="list-disc list-inside space-y-1 text-left">
+                <li>Check if audio was uploaded during tour creation</li>
+                <li>Verify the audio file format is supported (MP3, WAV, OGG)</li>
+                <li>Ensure Supabase storage is properly configured</li>
+              </ul>
+            </div>
+            <div className="flex gap-2 justify-center">
+              {retryCount < 3 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={retryAudio}
+                >
+                  Retry ({3 - retryCount} left)
+                </Button>
+              )}
+              {currentTrack?.audio_url && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -336,10 +376,14 @@ export default function AudioController({
                     console.log('Full audio URL:', currentTrack.audio_url);
                     window.open(currentTrack.audio_url, '_blank');
                   }}
-                  className="mt-1"
                 >
                   Test URL
                 </Button>
+              )}
+            </div>
+            {currentTrack?.audio_url && (
+              <div className="text-xs text-gray-500 border-t pt-2">
+                URL: {currentTrack.audio_url.substring(0, 80)}...
               </div>
             )}
           </div>
