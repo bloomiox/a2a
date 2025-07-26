@@ -233,7 +233,12 @@ export default function DriverDashboard() {
                       <h3 className="text-lg font-semibold">{tour?.title || t('driver.loading')}</h3>
                       <p className="text-muted-foreground text-sm mt-1">{tour?.description}</p>
                       <div className="flex justify-end mt-4">
-                        <Button>
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent div click
+                            navigate(`${createPageUrl('DriverNavigation')}?tourId=${tour.id}`);
+                          }}
+                        >
                           {t('driver.continueNavigation')} <ChevronsRight className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
