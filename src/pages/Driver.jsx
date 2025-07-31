@@ -180,6 +180,14 @@ export default function DriverDashboard() {
               <p className="text-gray-600 mt-1">{t('driver.dashboardSubtitle')}</p>
             </div>
             <div className="flex items-center gap-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/driver/mobile')}
+                className="hidden sm:flex"
+              >
+                📱 Mobile App
+              </Button>
               <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl('Profile'))}>
                 <UserIcon className="h-5 w-5" />
               </Button>

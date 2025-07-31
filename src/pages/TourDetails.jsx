@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/components/i18n/LanguageContext';
 import BookingDialog from '@/components/booking/BookingDialog';
+import DownloadManager from '@/components/offline/DownloadManager';
+import OfflineIndicator from '@/components/offline/OfflineIndicator';
 
 export default function TourDetails() {
   const { t } = useLanguage();
@@ -356,6 +358,20 @@ export default function TourDetails() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Offline Download */}
+            {user && (
+              <DownloadManager 
+                tourId={tourId}
+                tourTitle={tour.title}
+                onDownloadComplete={() => {
+                  // Refresh tour data or show success message
+                }}
+              />
+            )}
+
+            {/* Offline Status Indicator */}
+            <OfflineIndicator />
 
             {/* Additional Info */}
             <Card>

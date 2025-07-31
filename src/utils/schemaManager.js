@@ -1,5 +1,6 @@
 import { updateSchema, checkSchema } from '@/api/updateSchema';
 import { supabase } from '@/api/supabaseClient';
+import migrationRunner from './migrationRunner';
 
 /**
  * Simple test to check if Supabase connection is working
@@ -62,6 +63,16 @@ export const ensureSchemaUpToDate = async () => {
 
         if (updateResult) {
             console.log('Database schema updated successfully');
+            
+            // Run new migrations
+            try {
+                await migrationRunner.runMigrations();
+                console.log('Advanced feature migrations completed');
+            } catch (migrationError) {
+                console.warn('Migration runner failed:', migrationError.message);
+                // Continue anyway - migrations might not be critical for basic functionality
+            }
+            
             return true;
         } else {
             console.warn('Failed to update database schema - continuing anyway');

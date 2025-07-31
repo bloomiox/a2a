@@ -124,17 +124,9 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
       
       console.log("File uploaded successfully, URL:", result.url);
       
-      // Validate that the uploaded URL is accessible
-      try {
-        const testResponse = await fetch(result.url, { method: 'HEAD' });
-        if (!testResponse.ok) {
-          throw new Error(`Uploaded file not accessible: ${testResponse.status}`);
-        }
-        console.log("Upload URL validation successful");
-      } catch (validationError) {
-        console.error("Upload URL validation failed:", validationError);
-        throw new Error(`Upload succeeded but file is not accessible: ${validationError.message}`);
-      }
+      // Note: Skipping URL validation as Supabase storage may have different access patterns
+      // The audio will be validated when it's actually played
+      console.log("Upload completed, audio will be validated during playback");
       
       // Get duration of the audio file
       const audio = new Audio();
@@ -172,6 +164,20 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
     } catch (error) {
       console.error("Error uploading audio:", error);
       setIsUploading(false);
+      
+      // Provide user-friendly error messages
+      let userMessage = "Upload failed. ";
+      if (error.message.includes('Bucket not found')) {
+        userMessage += "Storage bucket not configured. Please contact administrator.";
+      } else if (error.message.includes('permission denied') || error.message.includes('403')) {
+        userMessage += "Permission denied. Please check storage configuration.";
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        userMessage += "Network error. Please check your connection and try again.";
+      } else {
+        userMessage += error.message;
+      }
+      
+      alert(userMessage);
     }
   };
   

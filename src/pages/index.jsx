@@ -48,6 +48,8 @@ import AuthCallback from "./AuthCallback";
 
 import TouristDashboard from "./TouristDashboard";
 
+import DriverMobileApp from "./DriverMobileApp";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -99,6 +101,8 @@ const PAGES = {
     AuthCallback: AuthCallback,
     
     TouristDashboard: TouristDashboard,
+    
+    DriverMobileApp: DriverMobileApp,
     
 }
 
@@ -174,6 +178,8 @@ function PagesContent() {
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 
                 <Route path="/touristdashboard" element={<TouristDashboard />} />
+                
+                <Route path="/driver/mobile" element={<DriverMobileApp />} />
                 
             </Routes>
         </Layout>
