@@ -50,6 +50,8 @@ import TouristDashboard from "./TouristDashboard";
 
 import DriverMobileApp from "./DriverMobileApp";
 
+import AudioStorageDiagnostic from "./AudioStorageDiagnostic";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -103,6 +105,8 @@ const PAGES = {
     TouristDashboard: TouristDashboard,
     
     DriverMobileApp: DriverMobileApp,
+    
+    AudioStorageDiagnostic: AudioStorageDiagnostic,
     
 }
 
@@ -180,6 +184,8 @@ function PagesContent() {
                 <Route path="/touristdashboard" element={<TouristDashboard />} />
                 
                 <Route path="/driver/mobile" element={<DriverMobileApp />} />
+                
+                <Route path="/audio-diagnostic" element={<AudioStorageDiagnostic />} />
                 
             </Routes>
         </Layout>

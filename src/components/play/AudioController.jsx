@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AudioErrorAlert from '@/components/common/AudioErrorAlert';
 
 export default function AudioController({
   currentStop,
@@ -341,52 +342,11 @@ export default function AudioController({
 
         {/* Error Display */}
         {error && (
-          <div className="text-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm space-y-3">
-            <div className="font-medium">
-              {typeof error === 'string' ? error : error.message}
-            </div>
-            {typeof error === 'object' && error.details && (
-              <div className="text-xs text-red-600">
-                {error.details}
-              </div>
-            )}
-            <div className="text-xs text-gray-600 bg-white p-2 rounded border">
-              <div className="font-medium mb-1">Troubleshooting:</div>
-              <ul className="list-disc list-inside space-y-1 text-left">
-                <li>Check if audio was uploaded during tour creation</li>
-                <li>Verify the audio file format is supported (MP3, WAV, OGG)</li>
-                <li>Ensure Supabase storage is properly configured</li>
-              </ul>
-            </div>
-            <div className="flex gap-2 justify-center">
-              {retryCount < 3 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={retryAudio}
-                >
-                  Retry ({3 - retryCount} left)
-                </Button>
-              )}
-              {currentTrack?.audio_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    console.log('Full audio URL:', currentTrack.audio_url);
-                    window.open(currentTrack.audio_url, '_blank');
-                  }}
-                >
-                  Test URL
-                </Button>
-              )}
-            </div>
-            {currentTrack?.audio_url && (
-              <div className="text-xs text-gray-500 border-t pt-2">
-                URL: {currentTrack.audio_url.substring(0, 80)}...
-              </div>
-            )}
-          </div>
+          <AudioErrorAlert 
+            error={error}
+            onRetry={retryCount < 3 ? retryAudio : null}
+            onDismiss={() => setError(null)}
+          />
         )}
 
         {/* Language Selection */}

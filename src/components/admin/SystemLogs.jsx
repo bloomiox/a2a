@@ -47,7 +47,8 @@ import {
   ChevronDown,
   ChevronUp,
   Filter,
-  Calendar
+  Calendar,
+  Stethoscope
 } from 'lucide-react';
 import { format } from 'date-fns';
 import loggingService from '@/services/LoggingService';
@@ -303,6 +304,15 @@ export default function SystemLogs() {
               </p>
             </div>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/audio-diagnostic', '_blank')}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <Stethoscope className="h-4 w-4 mr-2" />
+                Audio Diagnostic
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

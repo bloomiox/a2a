@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Mic, Square, Play, Pause, Upload, Trash } from "lucide-react";
 import { UploadFile } from "@/api/integrations";
 import { useLanguage } from '@/components/i18n/LanguageContext';
+import AudioErrorAlert from '@/components/common/AudioErrorAlert';
 
 export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioChange }) {
   const { t } = useLanguage();
@@ -12,6 +13,7 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
   const [recordingTime, setRecordingTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -164,20 +166,7 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
     } catch (error) {
       console.error("Error uploading audio:", error);
       setIsUploading(false);
-      
-      // Provide user-friendly error messages
-      let userMessage = "Upload failed. ";
-      if (error.message.includes('Bucket not found')) {
-        userMessage += "Storage bucket not configured. Please contact administrator.";
-      } else if (error.message.includes('permission denied') || error.message.includes('403')) {
-        userMessage += "Permission denied. Please check storage configuration.";
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        userMessage += "Network error. Please check your connection and try again.";
-      } else {
-        userMessage += error.message;
-      }
-      
-      alert(userMessage);
+      setUploadError(error);
     }
   };
   
@@ -209,6 +198,18 @@ export default function AudioRecorder({ stopIndex, audioIndex, audio, onAudioCha
   
   return (
     <div className="space-y-2">
+      {uploadError && (
+        <AudioErrorAlert 
+          error={uploadError}
+          onRetry={() => {
+            setUploadError(null);
+            // Trigger file input click to retry
+            fileInputRef.current?.click();
+          }}
+          onDismiss={() => setUploadError(null)}
+        />
+      )}
+      
       {audio.audio_url ? (
         <div className="flex items-center gap-2">
           <Button
